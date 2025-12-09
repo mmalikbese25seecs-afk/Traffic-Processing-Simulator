@@ -76,7 +76,7 @@ vcpkg-install() {
 # install packages
 echo -e "${CYAN}Installing packages ... ${RESET}"
 # > CHANGE: ADD YOUR PACKAGES HERE; vcpkg-install <package_name>
-vcpkg-install fmt
+vcpkg-install raylib
 echo -e "${CYAN}To install packages run ./external/vcpkg/vcpkg install <package_name>${RESET}"
 
 # setup cmake preset; REMOVE after setting up preset

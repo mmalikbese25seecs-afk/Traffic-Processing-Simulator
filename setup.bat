@@ -37,7 +37,7 @@ if not exist "external\vcpkg\vcpkg.exe" (
 
 :: install packages
 echo %CYAN%Installing packages ... %RESET%
-external\vcpkg\vcpkg.exe install fmt
+external\vcpkg\vcpkg.exe install raylib
 :: CHANGE: ADD YOUR PACKAGES HERE; vcpkg-install <package_name>
 echo %CYAN%To install packages run:%RESET%
 echo %PURPLE%external\vcpkg\vcpkg.exe install ^<package_name^>%RESET%
