@@ -1,75 +1,71 @@
 @echo off
-setlocal enabledelayedexpansion
+SETLOCAL EnableDelayedExpansion
+
+:: set up helper for colored‑echo (https://stackoverflow.com/questions/21660249/how-do-i-make-one-particular-line-of-a-batch-file-a-different-color-then-the-oth):
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+    set "DEL=%%a"
+)
 
 :: * parsing arguments
 set "BUILD_TYPE=Debug"
 if "%~1"=="--release" (
-set "BUILD_TYPE=Release"
+    set "BUILD_TYPE=Release"
 )
 :: * parsing arguments end
 
-:: * variables
-
-:: Colors (ANSI)
-for /f "tokens=2 delims==" %%I in ('"echo prompt $E ^| cmd"') do set "ESC=%%I"
-set "GREEN=%ESC%[0;32m"
-set "RED=%ESC%[0;31m"
-set "YELLOW=%ESC%[1;33m"
-set "CYAN=%ESC%[0;36m"
-set "PURPLE=%ESC%[0;35m"
-set "RESET=%ESC%[0m"
-
 :: * variables end
 
-echo %CYAN%Assuming Platform is Windows...%RESET%
-
+call :colorEcho 3 "Assuming Platform is Windows..."
 cls
-cls
-cls
-
-:: stop on errors
-setlocal enabledelayedexpansion
-set ERRLEV=0
 
 :: ensure build folder exists
 if not exist build (
-mkdir build
+    mkdir build
 )
 
-:: setting preset and overriding build type
-echo %YELLOW%Generating build files using CMake preset...%RESET%
+call :colorEcho 6 "Generating build files using CMake preset..."
 cmake --preset default-configure -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 
-echo %YELLOW%Compiling using CMake preset...%RESET%
+call :colorEcho 6 "Compiling using CMake preset..."
 cmake --build --preset default-build --config %BUILD_TYPE%
 
-echo %PURPLE%Executable Started...%RESET%
+call :colorEcho 5 "Executable Started..."
 
 set "EXE_PATH=build\main.exe"
 
-if not exist "!EXE_PATH!" (
-    echo %RED%Executable not found: !EXE_PATH!%RESET%
+if not exist "%EXE_PATH%" (
+    call :colorEcho 4 "Executable not found: %EXE_PATH%"
     exit /b 1
 )
 
-set "starttime=%time%"
-build\main.exe
-set "endtime=%time%"
-
-:: * print time
-for /f "tokens=1-4 delims=:.," %%a in ("%starttime%") do (
-    set /a startsecs=(%%a*3600)+(%%b*60)+%%c
-)
-for /f "tokens=1-4 delims=:.," %%a in ("%endtime%") do (
-    set /a endsecs=(%%a*3600)+(%%b*60)+%%c
+:: get start time
+for /f "tokens=1-3 delims=:." %%a in ("%time%") do (
+    set /a startsecs=%%a*3600 + %%b*60 + %%c
 )
 
-set /a elapsedsecs=!endsecs!-!startsecs!
-if !elapsedsecs! LSS 0 set /a elapsedsecs+=86400
+:: run executable
+"%EXE_PATH%"
 
-echo %PURPLE%Elapsed Time: !elapsedsecs! seconds%RESET%
+:: get end time
+for /f "tokens=1-3 delims=:." %%a in ("%time%") do (
+    set /a endsecs=%%a*3600 + %%b*60 + %%c
+)
 
-:: * print time end
+:: compute elapsed time
+set /a elapsed=endsecs-startsecs
+if %elapsed% LSS 0 set /a elapsed+=86400
+
+call :colorEcho 5 "Elapsed Time - %elapsed% seconds"
 
 endlocal
-pause
+goto :eof
+
+:: https://stackoverflow.com/questions/21660249/how-do-i-make-one-particular-line-of-a-batch-file-a-different-color-then-the-oth
+:colorEcho
+  rem %1 = color code (e.g. 1 = Blue, 2 = Green, 3 = Aqua, 4 = Red, 5 = Purple, 6 = Yellow, etc.)
+  rem %~2 = message text
+  <nul set /p ".=%DEL%" > "%~2"
+  findstr /v /a:%1 /R "^$" "%~2" nul
+  del "%~2" > nul 2>nul
+  echo.
+goto :eof

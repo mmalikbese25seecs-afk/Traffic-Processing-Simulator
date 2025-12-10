@@ -1,55 +1,50 @@
 @echo off
-setlocal enabledelayedexpansion
+SETLOCAL EnableDelayedExpansion
 
-:: colors
-set "GREEN="
-set "RED="
-set "YELLOW="
-set "CYAN="
-set "PURPLE="
-set "RESET="
-
-for /f "tokens=1,2 delims==" %%a in ('"prompt $H & for %%b in (1) do rem"') do set "BS=%%b"
-
-:: Helper to print colors (Windows 10+ supports ANSI)
-for /f "tokens=2 delims==" %%I in ('"echo prompt $E ^| cmd"') do set "ESC=%%I"
-set "GREEN=%ESC%[0;32m"
-set "RED=%ESC%[0;31m"
-set "YELLOW=%ESC%[1;33m"
-set "CYAN=%ESC%[0;36m"
-set "PURPLE=%ESC%[0;35m"
-set "RESET=%ESC%[0m"
+:: set up helper for colored‑echo (https://stackoverflow.com/questions/21660249/how-do-i-make-one-particular-line-of-a-batch-file-a-different-color-then-the-oth):
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+    set "DEL=%%a"
+)
 
 :: update submodules
-echo %CYAN%Updating git submodules ... %RESET%
+call :colorEcho 3 "Updating git submodules ..."
 git submodule update --init --recursive
 
-echo %CYAN%Assuming Platform is Windows ... %RESET%
+call :colorEcho 3 "Assuming Platform is Windows ..."
 
-:: bootstrap it to generate ./external/vcpkg/vcpkg.exe
-:: if vcpkg.exe doesn't exist
+:: bootstrap vcpkg if needed
 if not exist "external\vcpkg\vcpkg.exe" (
-    echo %YELLOW%Bootstrapping vcpkg ... %RESET%
+    call :colorEcho 6 "Bootstrapping vcpkg ..."
     call external\vcpkg\bootstrap-vcpkg.bat
 ) else (
-    echo %GREEN%vcpkg already bootstrapped.%RESET%
+    call :colorEcho 2 "vcpkg already bootstrapped."
 )
 
 :: install packages
-echo %CYAN%Installing packages ... %RESET%
+call :colorEcho 3 "Installing packages ..."
 external\vcpkg\vcpkg.exe install raylib
-:: CHANGE: ADD YOUR PACKAGES HERE; vcpkg-install <package_name>
-echo %CYAN%To install packages run:%RESET%
-echo %PURPLE%external\vcpkg\vcpkg.exe install ^<package_name^>%RESET%
+:: CHANGE: ADD YOUR PACKAGES HERE; vcpkg-install package_name
+call :colorEcho 5 "To install packages run"
+call :colorEcho 5 "external\vcpkg\vcpkg.exe install package_name"
 
 :: setup cmake preset; REMOVE after setting up preset
 cmake --preset default-configure
 
-echo %PURPLE%In VS Code, open Command Palette and select 'CMake: Select Build Preset' → 'Default'%RESET%
-echo %PURPLE%After successful setup, syntax highlighting and other features will activate.%RESET%
+call :colorEcho 5 "In VS Code, open Command Palette and select 'CMake Select Build Preset' - 'Default'"
+call :colorEcho 5 "After successful setup, syntax highlighting and other features will activate."
 
-echo %CYAN%Run run.bat to build and run the program.%RESET%
-echo %GREEN%Setup complete!%RESET%
+call :colorEcho 3 "Run run.bat to build and run the program."
+call :colorEcho 2 "Setup complete!"
 
 endlocal
-pause
+goto :eof
+
+:: https://stackoverflow.com/questions/21660249/how-do-i-make-one-particular-line-of-a-batch-file-a-different-color-then-the-oth
+:colorEcho
+  rem %1 = color code (e.g. 1=Blue, 2=Green, 3=Aqua, 4=Red, 5=Purple, 6=Yellow)
+  rem %~2 = message text
+  <nul set /p ".=%DEL%" > "%~2"
+  findstr /v /a:%1 /R "^$" "%~2" nul
+  del "%~2" > nul 2>nul
+  echo.
+goto :eof
