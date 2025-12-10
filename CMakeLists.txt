@@ -72,11 +72,17 @@ target_link_libraries(
     main PRIVATE
     raylib
     glfw
-    "-framework Cocoa"
-    "-framework IOKit"
-    "-framework CoreVideo"
-    "-framework Metal"
-    "-framework QuartzCore"
-    "-framework AppKit"
 )
 # END CHANGE
+
+# macOS-specific frameworks
+if(APPLE)
+    target_link_libraries(main PRIVATE
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework CoreVideo"
+        "-framework Metal"
+        "-framework QuartzCore"
+        "-framework AppKit"
+    )
+endif()

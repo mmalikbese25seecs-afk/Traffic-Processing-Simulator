@@ -1,4 +1,18 @@
 {
     "cmake.configureOnOpen": true,
     "cmake.useCMakePresets": "always",
+
+    "terminal.integrated.profiles.windows": {
+        "x64 Native Tools Command Prompt for VS": {
+            "path": "C:\\Windows\\System32\\cmd.exe",
+            "args": [
+                "/k",
+                "${workspaceFolder}\\.vscode\\launch_dev_cmd.bat"
+            ],
+            "overrideName": true,
+            "icon": "vscode",
+            "color": "terminal.ansiMagenta"
+        },
+    },
+    "terminal.integrated.defaultProfile.windows": "x64 Native Tools Command Prompt for VS"
 }
