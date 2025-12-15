@@ -28,12 +28,25 @@ void UpdateCar(Car &car)
     float deltaTime = GetFrameTime();
     car.action.elapsed += deltaTime;
 
+    // calculate forward vector
+    float radians = ConvertDegreesToRadians(car.rotationAngle);
+    Vector2 forward = {cos(radians), sin(radians)};
+
+    DebugDrawVector(car.position, forward, GREEN, 100);
+
     switch (car.action.type)
     {
     case CarActionType::Move:
-        // position += direction * speed * deltaTime
-        car.position.x += car.action.direction.x * car.action.speed * deltaTime;
-        car.position.y += car.action.direction.y * car.action.speed * deltaTime;
+    {
+        // calculate forward vector
+        float radians = ConvertDegreesToRadians(car.rotationAngle);
+        Vector2 forward = {cos(radians), sin(radians)}; // 0 deg = up
+
+        // position += forward * speed * deltaTime
+        car.position.x += forward.x * car.action.speed * deltaTime;
+        car.position.y += forward.y * car.action.speed * deltaTime;
+
+        DebugDrawVector(car.position, forward, GREEN, 100);
 
         // time up for this move action
         if (car.action.elapsed >= car.action.duration)
@@ -41,6 +54,7 @@ void UpdateCar(Car &car)
             car.action.type = CarActionType::None;
         }
         break;
+    }
 
     case CarActionType::Turn:
     {
@@ -78,16 +92,11 @@ void DrawCar(const Car &car)
         car.color);
 }
 
-void QueueMove(Car &car, const Vector2 &direction, float speed, float duration)
+void QueueMove(Car &car, float speed, float duration)
 {
-    float len = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-    if (len == 0.0f)
-        return;
-
     CarAction action;
     action.type = CarActionType::Move;
     action.duration = duration;
-    action.direction = {direction.x / len, direction.y / len};
     action.speed = speed;
 
     car.actionQueue.push(action);

@@ -16,7 +16,6 @@ struct CarAction
     float elapsed = 0.0f;
 
     // Move
-    Vector2 direction = {0.0f, 0.0f};
     float speed = 0.0f;
 
     // Turn
@@ -27,7 +26,7 @@ struct CarAction
 struct Car
 {
     Vector2 position = {0.0f, 0.0f};
-    Vector2 size = {50.0f, 30.0f};
+    Vector2 size = {30.0f, 50.0f};
     float rotationAngle = 0.0f; // authoritative rotation
     Color color = WHITE;
 
@@ -38,5 +37,5 @@ struct Car
 void UpdateCar(Car &car);
 void DrawCar(const Car &car);
 
-void QueueMove(Car &car, const Vector2 &direction, float speed, float duration);
+void QueueMove(Car &car, float speed, float duration);
 void QueueTurn(Car &car, float angle, float duration);

@@ -17,13 +17,13 @@ int main()
     myCar.color = BLUE;
 
     // car driver
-    QueueMove(myCar, {1.0f, 0.0f}, 100.0f, 2.0f);  // move right for 2 seconds
-    QueueTurn(myCar, 90.0f, 1.0f);                 // turn down over 1 second
-    QueueMove(myCar, {0.0f, 1.0f}, 100.0f, 2.0f);  // move down for 2 seconds
-    QueueTurn(myCar, 180.0f, 1.0f);                // turn left over 1 second
-    QueueMove(myCar, {-1.0f, 0.0f}, 100.0f, 2.0f); // move left for 2 seconds
-    QueueTurn(myCar, 720.0f, 1.0f);                // turn up over 1 second
-    QueueMove(myCar, {0.0f, -1.0f}, 100.0f, 2.0f); // move up for 2 seconds
+    QueueMove(myCar, 100.0f, 2.0f); // move right for 2 seconds
+    QueueTurn(myCar, 90.0f, 1.0f);  // turn down over 1 second
+    QueueMove(myCar, 100.0f, 2.0f); // move down for 2 seconds
+    QueueTurn(myCar, 180.0f, 1.0f); // turn left over 1 second
+    QueueMove(myCar, 100.0f, 2.0f); // move left for 2 seconds
+    QueueTurn(myCar, 720.0f, 1.0f); // turn up over 1 second
+    QueueMove(myCar, 100.0f, 2.0f); // move up for 2 seconds
 
     // Initialize the window
     InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, WINDOW_TITLE);
