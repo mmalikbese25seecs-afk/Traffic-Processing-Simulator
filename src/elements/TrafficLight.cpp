@@ -1,5 +1,4 @@
 #include "TrafficLight.hpp"
-#include "Utils.hpp"
 
 void UpdateTrafficLight(TrafficLight &trafficLight)
 {

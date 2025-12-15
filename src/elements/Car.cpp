@@ -1,10 +1,5 @@
 #include "Car.hpp"
 
-#include <cmath>
-
-#include "Utils.hpp"
-#include "WindowConfig.hpp"
-
 void UpdateCar(Car &car)
 {
     // if no actions, return
@@ -20,8 +15,8 @@ void UpdateCar(Car &car)
 
         if (car.action.type == CarActionType::Turn)
         {
+            // set initial angle for turn
             car.action.startAngle = car.rotationAngle;
-            // car.action.targetAngle = car.rotationAngle + car.action.targetAngle;
         }
     }
 

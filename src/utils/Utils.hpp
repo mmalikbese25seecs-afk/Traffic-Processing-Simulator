@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <cmath>
 #include <concepts>
+#include <vector>
 
 template <typename T>
     requires std::totally_ordered<T>
@@ -42,13 +43,4 @@ inline float ConvertRadiansToDegrees(float radians)
 inline bool IsColorEqual(const Color &a, const Color &b)
 {
     return (a.r == b.r) && (a.g == b.g) && (a.b == b.b) && (a.a == b.a);
-}
-
-inline void DebugDrawVector(const Vector2 &origin, const Vector2 &vector, Color color = RED, float scale = 1.0f)
-{
-    // make sure drawn on top
-    DrawLine(static_cast<int>(origin.x), static_cast<int>(origin.y),
-             static_cast<int>(origin.x + vector.x * scale),
-             static_cast<int>(origin.y + vector.y * scale),
-             color);
 }

@@ -1,6 +1,11 @@
 #pragma once
 #include <raylib.h>
+#include <cmath>
 #include <queue>
+
+#include "Utils.hpp"
+#include "Debug.hpp"
+#include "WindowConfig.hpp"
 
 enum class CarActionType
 {

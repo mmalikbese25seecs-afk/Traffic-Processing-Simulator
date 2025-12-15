@@ -4,6 +4,8 @@
 #include "Car.hpp"
 #include "TrafficLight.hpp"
 
+#include "Utils.hpp"
+#include "Debug.hpp"
 #include "WindowConfig.hpp"
 
 int main()
@@ -46,6 +48,8 @@ int main()
         // DrawTrafficLight(trafficLight);
         DrawCar(myCar);
         // draw end
+
+        ProcessDebugDraws();
 
         EndDrawing();
     }

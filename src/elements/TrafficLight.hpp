@@ -1,6 +1,8 @@
 #pragma once
 #include <raylib.h>
 
+#include "Utils.hpp"
+
 enum class TrafficLightState
 {
     TRED,
