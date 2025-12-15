@@ -1,40 +1,42 @@
-#include "raylib.h"
 #include <cmath>
+#include <raylib.h>
+
+#include "Car.hpp"
+#include "TrafficLight.hpp"
+
+#include "WindowConfig.hpp"
 
 int main()
 {
+    TrafficLight trafficLight;
+    trafficLight.position = {350.0f, 200.0f};
+    trafficLight.size = {100.0f, 100.0f};
+
+    Car myCar;
+    myCar.position = WINDOW_CENTER;
+    myCar.color = BLUE;
+
     // Initialize the window
-    InitWindow(800, 600, "Traffic Lights Simulator");
+    InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, WINDOW_TITLE);
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        // show fps
+        // debug
         DrawFPS(10, 10);
+        // debug end
 
-        // get input
-        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
-        {
-            DrawRectangle(350, 250, 100, 100, GREEN);
-        }
-        else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
-        {
-            DrawRectangle(350, 250, 100, 100, RED);
-        }
-        else if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W))
-        {
-            DrawRectangle(350, 250, 100, 100, BLUE);
-        }
-        else if (IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S))
-        {
-            DrawRectangle(350, 250, 100, 100, YELLOW);
-        }
-        else
-        {
-            DrawRectangle(350, 250, 100, 100, GRAY);
-        }
+        // update
+        // UpdateTrafficLight(trafficLight);
+        UpdateCar(myCar);
+        // update end
+
+        // draw
+        // DrawTrafficLight(trafficLight);
+        DrawCar(myCar);
+        // draw end
 
         EndDrawing();
     }
