@@ -7,83 +7,98 @@
 
 void UpdateCar(Car &car)
 {
-    _turnCarUpdate(car);
+    // if no actions, return
+    if (car.action.type == CarActionType::None && car.actionQueue.empty())
+        return;
 
-    _moveCarUpdate(car);
+    // pull next action if none active
+    if (car.action.type == CarActionType::None && !car.actionQueue.empty())
+    {
+        car.action = car.actionQueue.front();
+        car.actionQueue.pop();
+        car.action.elapsed = 0.0f;
+
+        if (car.action.type == CarActionType::Turn)
+        {
+            car.action.startAngle = car.rotationAngle;
+            // car.action.targetAngle = car.rotationAngle + car.action.targetAngle;
+        }
+    }
+
+    float deltaTime = GetFrameTime();
+    car.action.elapsed += deltaTime;
+
+    switch (car.action.type)
+    {
+    case CarActionType::Move:
+        // position += direction * speed * deltaTime
+        car.position.x += car.action.direction.x * car.action.speed * deltaTime;
+        car.position.y += car.action.direction.y * car.action.speed * deltaTime;
+
+        // time up for this move action
+        if (car.action.elapsed >= car.action.duration)
+        {
+            car.action.type = CarActionType::None;
+        }
+        break;
+
+    case CarActionType::Turn:
+    {
+        float elapsedTime = car.action.elapsed / car.action.duration;
+        Clamp(elapsedTime, 0.0f, 1.0f);
+
+        // time up for this turn action
+        if (elapsedTime >= 1.0f)
+        {
+            car.rotationAngle = car.action.targetAngle;
+            car.action.type = CarActionType::None;
+        }
+        else
+        {
+            // lerp; lerp(a, b, t) = a * (1 - t) + b * t
+            car.rotationAngle = car.action.startAngle * (1 - elapsedTime) + car.action.targetAngle * elapsedTime;
+        }
+
+        // wrap angle between 0-360
+        WrapAngle360(car.rotationAngle);
+        break;
+    }
+
+    case CarActionType::None:
+        break;
+    }
 }
 
 void DrawCar(const Car &car)
 {
-    // Draw the car as a rectangle with rotation
     DrawRectanglePro(
         {car.position.x, car.position.y, car.size.x, car.size.y},
-        {car.size.x / 2, car.size.y / 2}, // origin at center
-        GetRotationAngle(car),
+        {car.size.x * 0.5f, car.size.y * 0.5f},
+        car.rotationAngle,
         car.color);
 }
 
-void TurnCar(Car &car, float angle)
+void QueueMove(Car &car, const Vector2 &direction, float speed, float duration)
 {
-    if (car.isTurning)
+    float len = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (len == 0.0f)
         return;
 
-    car.isTurning = true;
-    car.turnElapsed = 0.0f;
-    car.turnStartAngle = GetRotationAngle(car);
-    car.turnTargetAngle = GetRotationAngle(car) + angle;
+    CarAction action;
+    action.type = CarActionType::Move;
+    action.duration = duration;
+    action.direction = {direction.x / len, direction.y / len};
+    action.speed = speed;
+
+    car.actionQueue.push(action);
 }
 
-float GetRotationAngle(const Car &car)
+void QueueTurn(Car &car, float angle, float duration)
 {
-    return ConvertRadiansToDegrees(atan2(car.velocity.y, car.velocity.x));
-}
+    CarAction action;
+    action.type = CarActionType::Turn;
+    action.duration = duration;
+    action.targetAngle = angle;
 
-void SetRotationAngle(Car &car, float angle)
-{
-    float radians = ConvertDegreesToRadians(angle);
-    car.velocity.x = cos(radians) * sqrt(pow(car.velocity.x, 2) + pow(car.velocity.y, 2));
-    car.velocity.y = sin(radians) * sqrt(pow(car.velocity.x, 2) + pow(car.velocity.y, 2));
-}
-
-void _turnCarUpdate(Car &car)
-{
-    // car turn logic
-    if (car.isTurning)
-    {
-        car.turnElapsed += GetFrameTime();
-        float turnProgress = car.turnElapsed / car.turnTime;
-
-        if (turnProgress >= 1.0f)
-        {
-            SetRotationAngle(car, car.turnTargetAngle);
-            car.isTurning = false;
-        }
-        else
-        {
-            float currentAngle = car.turnStartAngle + (car.turnTargetAngle - car.turnStartAngle) * turnProgress;
-            SetRotationAngle(car, currentAngle);
-        }
-    }
-}
-
-void _moveCarUpdate(Car &car)
-{
-    // get forward vector (up for 0 degrees)
-    float radians = ConvertDegreesToRadians(GetRotationAngle(car));
-    Vector2 forward = {cos(radians), sin(radians)};
-
-    // draw forward vector for debugging
-    DebugDrawVector(car.position, forward, YELLOW, 50.0f);
-
-    // move car forward
-    car.position.x += forward.x * car.velocity.x * GetFrameTime();
-    car.position.y += forward.y * car.velocity.y * GetFrameTime();
-
-    // keep car within window bounds (assuming window size 800x600)
-    // clang-format off
-    if (car.position.x < 0)             car.position.x = WINDOW_SIZE.x;
-    if (car.position.x > WINDOW_SIZE.x) car.position.x = 0;
-    if (car.position.y < 0)             car.position.y = WINDOW_SIZE.y;
-    if (car.position.y > WINDOW_SIZE.y) car.position.y = 0;
-    // clang-format on
+    car.actionQueue.push(action);
 }
