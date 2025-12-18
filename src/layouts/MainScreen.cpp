@@ -2,11 +2,50 @@
 
 #include "WindowConfig.hpp"
 
-void m_drawRoad()
+void layouts::updateGameState(GameState &state)
 {
+    const double time = GetTime();
+    const int interval = 1; // seconds
+
+    static int lastTick = -1;
+    const int currentTick = static_cast<int>(time) / interval;
+
+    if (currentTick != lastTick)
+    {
+        state.isTrafficLightOn = !state.isTrafficLightOn;
+        lastTick = currentTick;
+    }
 }
 
-void layouts::drawMainScreen()
+void layouts::m_drawTrafficLightSymbol(Vector2 center, float size, Color color)
+{
+    DrawCircleV(center, size, color);
+}
+
+void layouts::m_drawLShape(Vector2 center, float perpendicularDistanceToEdge, float width, bool facesTop, bool facesLeft, Color color)
+{
+    // horizontal part
+    Rectangle horizontalRect = Rectangle{
+        .x = center.x + (facesLeft ? -perpendicularDistanceToEdge - width : 0),
+        .y = center.y + (facesTop ? perpendicularDistanceToEdge : -perpendicularDistanceToEdge - width),
+        // + width to cover corner
+        .width = perpendicularDistanceToEdge + width,
+        .height = width //
+    };
+    DrawRectangleRec(horizontalRect, color);
+
+    // vertical part
+    Rectangle verticalRect = Rectangle{
+        .x = center.x + (facesLeft ? -perpendicularDistanceToEdge - width : perpendicularDistanceToEdge),
+        .y = center.y + (facesTop ? 0 : -perpendicularDistanceToEdge),
+        .width = width,
+        // no corner compensation for vertical
+        .height = perpendicularDistanceToEdge //
+    };
+    DrawRectangleRec(verticalRect, color);
+}
+
+void layouts::m_drawRoads()
 {
     // left road -------------------------------------------------------
     Rectangle leftRoadRect = Rectangle{
@@ -162,41 +201,48 @@ void layouts::drawMainScreen()
         CFG::WINDOW_CENTER.x - ROAD_SIZE / 2,
         CFG::WINDOW_CENTER.y - ROAD_SIZE / 2 //
     };
-    m_drawL(topLeftCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, true, false, ROAD_OUTER_LINE_COLOR);
+    m_drawLShape(topLeftCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, true, false, ROAD_OUTER_LINE_COLOR);
     Vector2 topRightCorner = {
         CFG::WINDOW_CENTER.x + ROAD_SIZE / 2,
         CFG::WINDOW_CENTER.y - ROAD_SIZE / 2 //
     };
-    m_drawL(topRightCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, true, true, ROAD_OUTER_LINE_COLOR);
+    m_drawLShape(topRightCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, true, true, ROAD_OUTER_LINE_COLOR);
     Vector2 bottomLeftCorner = {
         CFG::WINDOW_CENTER.x - ROAD_SIZE / 2,
         CFG::WINDOW_CENTER.y + ROAD_SIZE / 2 //
     };
-    m_drawL(bottomLeftCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, false, false, ROAD_OUTER_LINE_COLOR);
+    m_drawLShape(bottomLeftCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, false, false, ROAD_OUTER_LINE_COLOR);
     Vector2 bottomRightCorner = {
         CFG::WINDOW_CENTER.x + ROAD_SIZE / 2,
         CFG::WINDOW_CENTER.y + ROAD_SIZE / 2 //
     };
-    m_drawL(bottomRightCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, false, true, ROAD_OUTER_LINE_COLOR);
+    m_drawLShape(bottomRightCorner, ROAD_OUTER_LINE_PADDING, ROAD_OUTER_LINE_WIDTH, false, true, ROAD_OUTER_LINE_COLOR);
 }
 
-void layouts::m_drawL(Vector2 center, float perpendicularDistanceToEdge, float width, bool facesTop, bool facesLeft, Color color)
+void layouts::drawMainScreen(const GameState &state)
 {
-    // horizontal part
-    Rectangle horizontalRect = Rectangle{
-        .x = center.x + (facesLeft ? -perpendicularDistanceToEdge - width : 0),
-        .y = center.y + (facesTop ? perpendicularDistanceToEdge : -perpendicularDistanceToEdge - width),
-        .width = perpendicularDistanceToEdge + width, // + width to cover corner
-        .height = width                               //
-    };
-    DrawRectangleRec(horizontalRect, color);
+    m_drawRoads();
 
-    // vertical part
-    Rectangle verticalRect = Rectangle{
-        .x = center.x + (facesLeft ? -perpendicularDistanceToEdge - width : perpendicularDistanceToEdge),
-        .y = center.y + (!facesTop ? -perpendicularDistanceToEdge : 0),
-        .width = width,
-        .height = perpendicularDistanceToEdge // no corner compensation for vertical
+    Vector2 topRoadLightPos = {
+        CFG::WINDOW_CENTER.x,
+        CFG::WINDOW_CENTER.y - ROAD_SIZE / 2 //
     };
-    DrawRectangleRec(verticalRect, color);
+    Vector2 leftRoadLightPos = {
+        CFG::WINDOW_CENTER.x - ROAD_SIZE / 2,
+        CFG::WINDOW_CENTER.y //
+    };
+    Vector2 bottomRoadLightPos = {
+        CFG::WINDOW_CENTER.x,
+        CFG::WINDOW_CENTER.y + ROAD_SIZE / 2 //
+    };
+    Vector2 rightRoadLightPos = {
+        CFG::WINDOW_CENTER.x + ROAD_SIZE / 2,
+        CFG::WINDOW_CENTER.y //
+    };
+
+    Color trafficLightColor = state.isTrafficLightOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
+    m_drawTrafficLightSymbol(topRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    m_drawTrafficLightSymbol(leftRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    m_drawTrafficLightSymbol(bottomRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    m_drawTrafficLightSymbol(rightRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
 }

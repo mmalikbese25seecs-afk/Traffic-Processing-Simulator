@@ -8,6 +8,8 @@
 
 int main()
 {
+    layouts::GameState gameState;
+
     // Initialize the window
     InitWindow(CFG::WINDOW_SIZE.x, CFG::WINDOW_SIZE.y, CFG::WINDOW_TITLE);
     SetTargetFPS(60);
@@ -21,10 +23,11 @@ int main()
         // debug end
 
         // update
+        layouts::updateGameState(gameState);
         // update end
 
         // draw
-        layouts::drawMainScreen();
+        layouts::drawMainScreen(gameState);
         // draw end
 
         utils::__ProcessDebugDraws();
