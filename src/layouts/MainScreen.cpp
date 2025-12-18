@@ -2,6 +2,32 @@
 
 #include "WindowConfig.hpp"
 
+void layouts::initGameState(GameState &state)
+{
+    Vector2 topRoadLightPos = {
+        CFG::WINDOW_CENTER.x,
+        CFG::WINDOW_CENTER.y - ROAD_SIZE / 2 //
+    };
+    Vector2 leftRoadLightPos = {
+        CFG::WINDOW_CENTER.x - ROAD_SIZE / 2,
+        CFG::WINDOW_CENTER.y //
+    };
+    Vector2 bottomRoadLightPos = {
+        CFG::WINDOW_CENTER.x,
+        CFG::WINDOW_CENTER.y + ROAD_SIZE / 2 //
+    };
+    Vector2 rightRoadLightPos = {
+        CFG::WINDOW_CENTER.x + ROAD_SIZE / 2,
+        CFG::WINDOW_CENTER.y //
+    };
+
+    // add traffic lights
+    state.trafficLights.push_back(TrafficLight{topRoadLightPos, {0, -1}, true});
+    state.trafficLights.push_back(TrafficLight{leftRoadLightPos, {-1, 0}, false});
+    state.trafficLights.push_back(TrafficLight{bottomRoadLightPos, {0, 1}, false});
+    state.trafficLights.push_back(TrafficLight{rightRoadLightPos, {1, 0}, false});
+}
+
 void layouts::updateGameState(GameState &state)
 {
     const double time = GetTime();
@@ -10,11 +36,21 @@ void layouts::updateGameState(GameState &state)
     static int lastTick = -1;
     const int currentTick = static_cast<int>(time) / interval;
 
-    if (currentTick != lastTick)
+    if (currentTick == lastTick)
+        return;
+
+    const size_t count = state.trafficLights.size();
+    if (count == 0)
+        return;
+
+    const size_t activeIndex = static_cast<size_t>(currentTick % static_cast<int>(count));
+
+    for (size_t i = 0; i < count; ++i)
     {
-        state.isTrafficLightOn = !state.isTrafficLightOn;
-        lastTick = currentTick;
+        state.trafficLights[i].isOn = (i == activeIndex);
     }
+
+    lastTick = currentTick;
 }
 
 void layouts::m_drawTrafficLightSymbol(Vector2 center, float size, Color color)
@@ -223,26 +259,9 @@ void layouts::drawMainScreen(const GameState &state)
 {
     m_drawRoads();
 
-    Vector2 topRoadLightPos = {
-        CFG::WINDOW_CENTER.x,
-        CFG::WINDOW_CENTER.y - ROAD_SIZE / 2 //
-    };
-    Vector2 leftRoadLightPos = {
-        CFG::WINDOW_CENTER.x - ROAD_SIZE / 2,
-        CFG::WINDOW_CENTER.y //
-    };
-    Vector2 bottomRoadLightPos = {
-        CFG::WINDOW_CENTER.x,
-        CFG::WINDOW_CENTER.y + ROAD_SIZE / 2 //
-    };
-    Vector2 rightRoadLightPos = {
-        CFG::WINDOW_CENTER.x + ROAD_SIZE / 2,
-        CFG::WINDOW_CENTER.y //
-    };
-
-    Color trafficLightColor = state.isTrafficLightOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
-    m_drawTrafficLightSymbol(topRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
-    m_drawTrafficLightSymbol(leftRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
-    m_drawTrafficLightSymbol(bottomRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
-    m_drawTrafficLightSymbol(rightRoadLightPos, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    for (const auto &trafficLight : state.trafficLights)
+    {
+        Color trafficLightColor = trafficLight.isOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
+        m_drawTrafficLightSymbol(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    }
 }

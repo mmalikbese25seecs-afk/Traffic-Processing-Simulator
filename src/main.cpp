@@ -13,6 +13,9 @@ int main()
     // Initialize the window
     InitWindow(CFG::WINDOW_SIZE.x, CFG::WINDOW_SIZE.y, CFG::WINDOW_TITLE);
     SetTargetFPS(60);
+
+    layouts::initGameState(gameState);
+
     while (!WindowShouldClose())
     {
         BeginDrawing();

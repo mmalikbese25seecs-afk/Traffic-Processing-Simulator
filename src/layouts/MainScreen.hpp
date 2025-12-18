@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <raylib.h>
 
 namespace layouts
@@ -20,11 +21,19 @@ namespace layouts
     constexpr Color TRAFFIC_LIGHT_ON_COLOR = GREEN;
     constexpr Color TRAFFIC_LIGHT_OFF_COLOR = RED;
 
-    struct GameState
+    struct TrafficLight
     {
-        bool isTrafficLightOn = false;
+        Vector2 position;
+        Vector2 direction;
+        bool isOn;
     };
 
+    struct GameState
+    {
+        std::vector<TrafficLight> trafficLights;
+    };
+
+    void initGameState(GameState &state);
     void updateGameState(GameState &state);
 
     void m_drawRoads();
