@@ -1,8 +1,6 @@
 #pragma once
 #include <raylib.h>
 
-#include "MainScreen.hpp"
-
 struct GameState;
 
 struct Car
@@ -18,3 +16,6 @@ void DrawCar(const Car &car);
 
 void SetCarVelocity(Car &car, Vector2 newVelocity);
 Vector2 GetCarVelocity(const Car &car);
+
+void StopCar(Car& car);
+void ResumeCar(Car& car);

@@ -3,18 +3,15 @@
 #include <vector>
 #include <raylib.h>
 
-#include "TrafficLight.hpp"
-#include "Roads.hpp"
 #include "Car.hpp"
-
-struct Car;
+#include "TrafficLight.hpp"
 
 struct GameState
 {
     TrafficLightGroup trafficLightGroup;
 
     std::vector<Car> cars;
-    float deltaTime = 0.0f;
+    float deltaTime = 0.f;
 };
 
 void InitGameState(GameState &state);

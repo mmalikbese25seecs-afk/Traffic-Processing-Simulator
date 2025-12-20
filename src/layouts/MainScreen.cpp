@@ -1,6 +1,7 @@
 #include "MainScreen.hpp"
 
 #include "WindowConfig.hpp"
+#include "Roads.hpp"
 
 void InitGameState(GameState &state)
 {
@@ -22,18 +23,19 @@ void InitGameState(GameState &state)
         WINDOW_CENTER.y //
     };
 
-    state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, -1}, true};
-    state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {-1, 0}, false};
-    state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, 1}, false};
-    state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {1, 0}, false};
+    state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, 1}, true};
+    state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {1, 0}, false};
+    state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, -1}, false};
+    state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {-1, 0}, false};
+    state.trafficLightGroup.currentGroup = true;
 
     // cars
     Vector2 carStartPos = {
         WINDOW_CENTER.x,
-        WINDOW_CENTER.y //
+        WINDOW_SIZE.y + 200.f //
     };
     // for direction car is facing towards center
-    Vector2 carVelocity = {0, -100}; // moving upwards
+    Vector2 carVelocity = {0, -50}; // moving upwards
     state.cars.push_back(Car{carStartPos, carVelocity, BLUE});
 }
 
@@ -69,12 +71,7 @@ void UpdateGameState(GameState &state)
 void DrawMainScreen(const GameState &state)
 {
     DrawRoads();
-
-    for (const auto &trafficLight : state.trafficLightGroup.trafficLights)
-    {
-        Color trafficLightColor = trafficLight.isOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
-        DrawTrafficLight(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
-    }
+    DrawTrafficLightGroup(state.trafficLightGroup);
 
     for (const auto &car : state.cars)
     {
