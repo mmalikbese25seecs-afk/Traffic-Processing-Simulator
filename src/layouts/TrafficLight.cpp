@@ -98,8 +98,13 @@ bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
         }
     }
 
+    // car has passed the traffic light
+    if (Vector2Dot(GetCarVelocity(car), closestLight.direction) < 0.f)
+        return true;
+
+    // far away from traffic light
     if (shortestDistance > TRAFFIC_LIGHT_STOP_DISTANCE)
-        return true; // far away from traffic light
+        return true;
 
     // check if car is moving towards signal
     bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight.direction);

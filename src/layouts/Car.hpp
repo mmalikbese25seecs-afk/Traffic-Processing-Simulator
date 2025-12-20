@@ -6,6 +6,8 @@ struct GameState;
 constexpr float CAR_WIDTH = 20.f;
 constexpr float CAR_HEIGHT = 40.f;
 constexpr float CAR_SPEED = 100.f;
+// distance from car to other car to stop
+constexpr float CAR_REAR_END_DISTANCE = 50.f;
 
 struct Car
 {

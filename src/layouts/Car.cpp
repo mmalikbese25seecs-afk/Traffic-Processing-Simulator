@@ -5,6 +5,7 @@
 
 #include "MainScreen.hpp"
 #include "Debug.hpp"
+#include "VectorMath.hpp"
 
 void m_updateVelocity(Car &car, const GameState &state)
 {
@@ -12,9 +13,39 @@ void m_updateVelocity(Car &car, const GameState &state)
     car.position.y += car._velocity.y * state.deltaTime;
 }
 
+bool m_canCarMove(const Car &car, const GameState &state)
+{
+    for (const auto &otherCar : state.cars)
+    {
+        // skip self
+        if (&otherCar == &car)
+            continue;
+
+        float distance = Vector2Distance(car.position, otherCar.position);
+        if (distance < CAR_REAR_END_DISTANCE)
+        {
+            // check if other car is in front of this car
+            Vector2 toOther = {
+                otherCar.position.x - car.position.x,
+                otherCar.position.y - car.position.y //
+            };
+            Vector2Normalize(toOther);
+            Vector2 desiredDir = car.desiredVelocity;
+            Vector2Normalize(desiredDir);
+
+            float dot = Vector2Dot(toOther, desiredDir);
+            // other car is in front
+            if (dot > 0.7071f) 
+                return false;
+        }
+    }
+    // no car in front
+    return true;
+}
+
 void UpdateCar(Car &car, const GameState &state)
 {
-    if (!CanCarPass(state.trafficLightGroup, car))
+    if (!CanCarPass(state.trafficLightGroup, car) || !m_canCarMove(car, state))
         StopCar(car);
     else
         ResumeCar(car);

@@ -31,22 +31,20 @@ void InitGameState(GameState &state)
     state.trafficLightGroup.currentGroup = true;
 
     // cars
-    constexpr int numCarsPerDirection = 5;
-    constexpr float spacing = 100.f;
     Vector2 bottomCarStartPos = {
         WINDOW_CENTER.x + ROAD_SIZE / 4,
-        WINDOW_SIZE.y + 100.f //
+        WINDOW_SIZE.y + START_OFFSET //
     };
     Vector2 topCarStartPos = {
         WINDOW_CENTER.x - ROAD_SIZE / 4,
-        -100.f //
+        -START_OFFSET //
     };
     Vector2 leftCarStartPos = {
-        -100.f,
+        -START_OFFSET,
         WINDOW_CENTER.y - ROAD_SIZE / 4 //
     };
     Vector2 rightCarStartPos = {
-        WINDOW_SIZE.x + 100.f,
+        WINDOW_SIZE.x + START_OFFSET,
         WINDOW_CENTER.y + ROAD_SIZE / 4 //
     };
 
@@ -59,29 +57,29 @@ void InitGameState(GameState &state)
         };
         state.cars.push_back(newCar);
     };
-    for (int i = 0; i < numCarsPerDirection; ++i)
+    for (int i = 0; i < NUM_CARS_PER_DIRECTION; ++i)
     {
         // bottom to top
         addCarLambda(
-            {bottomCarStartPos.x, bottomCarStartPos.y + i * spacing},
+            {bottomCarStartPos.x, bottomCarStartPos.y + i * SPACING},
             {0.f, -CAR_SPEED},
             {CAR_WIDTH, CAR_HEIGHT} //
         );
         // top to bottom
         addCarLambda(
-            {topCarStartPos.x, topCarStartPos.y - i * spacing},
+            {topCarStartPos.x, topCarStartPos.y - i * SPACING},
             {0.f, CAR_SPEED},
             {CAR_WIDTH, CAR_HEIGHT} //
         );
         // left to right
         addCarLambda(
-            {leftCarStartPos.x - i * spacing, leftCarStartPos.y},
+            {leftCarStartPos.x - i * SPACING, leftCarStartPos.y},
             {CAR_SPEED, 0.f},
             {CAR_HEIGHT, CAR_WIDTH} //
         );
         // right to left
         addCarLambda(
-            {rightCarStartPos.x + i * spacing, rightCarStartPos.y},
+            {rightCarStartPos.x + i * SPACING, rightCarStartPos.y},
             {-CAR_SPEED, 0.f},
             {CAR_HEIGHT, CAR_WIDTH} //
         );
