@@ -5,6 +5,24 @@
 
 #include "Car.hpp"
 #include "VectorMath.hpp"
+#include "MainScreen.hpp"
+
+void UpdateTrafficLights(GameState &state)
+{
+    const double time = GetTime();
+    const int interval = TRAFFIC_LIGHT_SWITCH_INTERVAL; // seconds
+
+    static int lastTick = -1;
+    const int currentTick = static_cast<int>(time) / interval;
+
+    if (currentTick == lastTick)
+        return;
+
+    // code below runs once per interval
+    SwitchTrafficLights(state.trafficLightGroup);
+
+    lastTick = currentTick;
+}
 
 void SwitchTrafficLights(TrafficLightGroup &group)
 {

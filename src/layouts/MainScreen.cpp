@@ -2,6 +2,7 @@
 
 #include "WindowConfig.hpp"
 #include "Roads.hpp"
+#include "Debug.hpp"
 
 void InitGameState(GameState &state)
 {
@@ -30,37 +31,68 @@ void InitGameState(GameState &state)
     state.trafficLightGroup.currentGroup = true;
 
     // cars
-    Vector2 carStartPos = {
-        WINDOW_CENTER.x,
-        WINDOW_SIZE.y + 200.f //
+    constexpr int numCarsPerDirection = 5;
+    constexpr float spacing = 100.f;
+    Vector2 bottomCarStartPos = {
+        WINDOW_CENTER.x + ROAD_SIZE / 4,
+        WINDOW_SIZE.y + 100.f //
     };
-    // for direction car is facing towards center
-    Vector2 carVelocity = {0, -50}; // moving upwards
-    state.cars.push_back(Car{carStartPos, carVelocity, BLUE});
-}
+    Vector2 topCarStartPos = {
+        WINDOW_CENTER.x - ROAD_SIZE / 4,
+        -100.f //
+    };
+    Vector2 leftCarStartPos = {
+        -100.f,
+        WINDOW_CENTER.y - ROAD_SIZE / 4 //
+    };
+    Vector2 rightCarStartPos = {
+        WINDOW_SIZE.x + 100.f,
+        WINDOW_CENTER.y + ROAD_SIZE / 4 //
+    };
 
-void m_updateTrafficLights(GameState &state)
-{
-    const double time = GetTime();
-    const int interval = 1; // seconds
-
-    static int lastTick = -1;
-    const int currentTick = static_cast<int>(time) / interval;
-
-    if (currentTick == lastTick)
-        return;
-
-    // code below runs once per interval
-    SwitchTrafficLights(state.trafficLightGroup);
-
-    lastTick = currentTick;
+    auto addCarLambda = [&](const Vector2 &position, const Vector2 &velocity, const Vector2 &size)
+    {
+        Car newCar = {
+            .position = position,
+            .size = size,
+            .desiredVelocity = velocity //
+        };
+        state.cars.push_back(newCar);
+    };
+    for (int i = 0; i < numCarsPerDirection; ++i)
+    {
+        // bottom to top
+        addCarLambda(
+            {bottomCarStartPos.x, bottomCarStartPos.y + i * spacing},
+            {0.f, -CAR_SPEED},
+            {CAR_WIDTH, CAR_HEIGHT} //
+        );
+        // top to bottom
+        addCarLambda(
+            {topCarStartPos.x, topCarStartPos.y - i * spacing},
+            {0.f, CAR_SPEED},
+            {CAR_WIDTH, CAR_HEIGHT} //
+        );
+        // left to right
+        addCarLambda(
+            {leftCarStartPos.x - i * spacing, leftCarStartPos.y},
+            {CAR_SPEED, 0.f},
+            {CAR_HEIGHT, CAR_WIDTH} //
+        );
+        // right to left
+        addCarLambda(
+            {rightCarStartPos.x + i * spacing, rightCarStartPos.y},
+            {-CAR_SPEED, 0.f},
+            {CAR_HEIGHT, CAR_WIDTH} //
+        );
+    }
 }
 
 void UpdateGameState(GameState &state)
 {
     state.deltaTime = GetFrameTime();
 
-    m_updateTrafficLights(state);
+    UpdateTrafficLights(state);
 
     for (auto &car : state.cars)
     {

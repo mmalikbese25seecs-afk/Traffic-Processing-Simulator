@@ -4,6 +4,7 @@
 #include <raylib.h>
 
 struct Car;
+struct GameState;
 
 // traffic light
 constexpr float TRAFFIC_LIGHT_RADIUS = 10.f;
@@ -14,6 +15,7 @@ constexpr float TRAFFIC_LIGHT_BG_PADDING = 5.f;
 // distance from traffic light to stop car
 constexpr float TRAFFIC_LIGHT_STOP_DISTANCE = 50.f;
 constexpr float TRAFFIC_LIGHT_CAP_DISTANCE = 25.f;
+constexpr int TRAFFIC_LIGHT_SWITCH_INTERVAL = 5.f; // seconds
 
 struct TrafficLight
 {
@@ -29,6 +31,7 @@ struct TrafficLightGroup
     bool currentGroup = false;
 };
 
+void UpdateTrafficLights(GameState &state);
 void SwitchTrafficLights(TrafficLightGroup &group);
 void DrawTrafficLightGroup(const TrafficLightGroup &light);
 
