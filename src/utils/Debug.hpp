@@ -10,12 +10,19 @@ struct __DebugLine
     int thickness = 5;
 };
 
-inline std::queue<__DebugLine> g_DebugLines;
+struct __DebugPoint
+{
+    Vector2 position;
+    Color color;
+    float radius = 5.f;
+};
 
+inline std::queue<__DebugLine> g_DebugLines;
+inline std::queue<__DebugPoint> g_DebugPoints;
 /// @brief Call every frame
 /// @param color [OPTIONAL] Default `RED`
-/// @param scale [OPTIONAL] Default `1.0f`
-inline void __DebugDrawVector(const Vector2 &origin, const Vector2 &vector, Color color = RED, float scale = 1.0f)
+/// @param scale [OPTIONAL] Default `1.f`
+inline void __DebugDrawVector(const Vector2 &origin, const Vector2 &vector, Color color = RED, float scale = 1.f)
 {
     // using queue because we process then delete
     __DebugLine line;
@@ -25,10 +32,21 @@ inline void __DebugDrawVector(const Vector2 &origin, const Vector2 &vector, Colo
     g_DebugLines.push(line);
 }
 
+/// @brief Call every frame
+/// @param color [OPTIONAL] Default `RED`
+/// @param radius [OPTIONAL] Default `5.f`
+inline void __DebugDrawPoint(const Vector2 &position, Color color = RED, float radius = 5.f)
+{
+    __DebugPoint point;
+    point.position = position;
+    point.color = color;
+    point.radius = radius;
+    g_DebugPoints.push(point);
+}
+
 inline void __ProcessDebugDraws()
 {
     // draw lines of each frame, the next frame clears the previous line
-    //
     while (!g_DebugLines.empty())
     {
         __DebugLine line = g_DebugLines.front();
@@ -37,5 +55,11 @@ inline void __ProcessDebugDraws()
         //          line.color);
         DrawLineEx(line.start, line.end, static_cast<float>(line.thickness), line.color);
         g_DebugLines.pop();
+    }
+    while (!g_DebugPoints.empty())
+    {
+        __DebugPoint point = g_DebugPoints.front();
+        DrawCircleV(point.position, point.radius, point.color);
+        g_DebugPoints.pop();
     }
 }
