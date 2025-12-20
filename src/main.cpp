@@ -8,13 +8,13 @@
 
 int main()
 {
-    layouts::GameState gameState;
+    GameState gameState;
 
     // Initialize the window
-    InitWindow(CFG::WINDOW_SIZE.x, CFG::WINDOW_SIZE.y, CFG::WINDOW_TITLE);
+    InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, WINDOW_TITLE);
     SetTargetFPS(60);
 
-    layouts::initGameState(gameState);
+    initGameState(gameState);
 
     while (!WindowShouldClose())
     {
@@ -26,14 +26,14 @@ int main()
         // debug end
 
         // update
-        layouts::updateGameState(gameState);
+        updateGameState(gameState);
         // update end
 
         // draw
-        layouts::drawMainScreen(gameState);
+        drawMainScreen(gameState);
         // draw end
 
-        utils::__ProcessDebugDraws();
+        __ProcessDebugDraws();
 
         EndDrawing();
     }
