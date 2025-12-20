@@ -2,8 +2,9 @@
 
 #include "WindowConfig.hpp"
 
-void initGameState(GameState &state)
+void InitGameState(GameState &state)
 {
+    // traffic lights
     Vector2 topRoadLightPos = {
         WINDOW_CENTER.x,
         WINDOW_CENTER.y - ROAD_SIZE / 2 //
@@ -21,14 +22,22 @@ void initGameState(GameState &state)
         WINDOW_CENTER.y //
     };
 
-    // add traffic lights
     state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, -1}, true};
     state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {-1, 0}, false};
     state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, 1}, false};
     state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {1, 0}, false};
+
+    // cars
+    Vector2 carStartPos = {
+        WINDOW_CENTER.x,
+        WINDOW_CENTER.y //
+    };
+    // for direction car is facing towards center
+    Vector2 carVelocity = {0, -100}; // moving upwards
+    state.cars.push_back(Car{carStartPos, carVelocity, BLUE});
 }
 
-void updateGameState(GameState &state)
+void m_updateTrafficLights(GameState &state)
 {
     const double time = GetTime();
     const int interval = 1; // seconds
@@ -40,18 +49,35 @@ void updateGameState(GameState &state)
         return;
 
     // code below runs once per interval
-    switchTrafficLights(state.trafficLightGroup);
+    SwitchTrafficLights(state.trafficLightGroup);
 
     lastTick = currentTick;
 }
 
-void drawMainScreen(const GameState &state)
+void UpdateGameState(GameState &state)
+{
+    state.deltaTime = GetFrameTime();
+
+    m_updateTrafficLights(state);
+
+    for (auto &car : state.cars)
+    {
+        UpdateCar(car, state);
+    }
+}
+
+void DrawMainScreen(const GameState &state)
 {
     DrawRoads();
 
     for (const auto &trafficLight : state.trafficLightGroup.trafficLights)
     {
         Color trafficLightColor = trafficLight.isOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
-        m_drawTrafficLightSymbol(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+        DrawTrafficLight(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
+    }
+
+    for (const auto &car : state.cars)
+    {
+        DrawCar(car);
     }
 }

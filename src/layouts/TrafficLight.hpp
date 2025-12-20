@@ -22,5 +22,5 @@ struct TrafficLightGroup
     bool currentGroup = false;
 };
 
-void switchTrafficLights(TrafficLightGroup &group);
-void m_drawTrafficLightSymbol(Vector2 center, float size, Color color);
+void SwitchTrafficLights(TrafficLightGroup &group);
+void DrawTrafficLight(Vector2 center, float size, Color color);

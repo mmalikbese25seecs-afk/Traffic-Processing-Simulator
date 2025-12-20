@@ -1,6 +1,6 @@
 #include "TrafficLight.hpp"
 
-void switchTrafficLights(TrafficLightGroup &group)
+void SwitchTrafficLights(TrafficLightGroup &group)
 {
     if (group.currentGroup)
     {
@@ -23,7 +23,7 @@ void switchTrafficLights(TrafficLightGroup &group)
     group.currentGroup = !group.currentGroup;
 }
 
-void m_drawTrafficLightSymbol(Vector2 center, float size, Color color)
+void DrawTrafficLight(Vector2 center, float size, Color color)
 {
     DrawCircleV(center, size, color);
 }

@@ -7,9 +7,10 @@ struct __DebugLine
     Vector2 start;
     Vector2 end;
     Color color;
+    int thickness = 5;
 };
 
-std::queue<__DebugLine> g_DebugLines;
+inline std::queue<__DebugLine> g_DebugLines;
 
 /// @brief Call every frame
 /// @param color [OPTIONAL] Default `RED`
@@ -31,9 +32,10 @@ inline void __ProcessDebugDraws()
     while (!g_DebugLines.empty())
     {
         __DebugLine line = g_DebugLines.front();
-        DrawLine(static_cast<int>(line.start.x), static_cast<int>(line.start.y),
-                 static_cast<int>(line.end.x), static_cast<int>(line.end.y),
-                 line.color);
+        // DrawLine(static_cast<int>(line.start.x), static_cast<int>(line.start.y),
+        //          static_cast<int>(line.end.x), static_cast<int>(line.end.y),
+        //          line.color);
+        DrawLineEx(line.start, line.end, static_cast<float>(line.thickness), line.color);
         g_DebugLines.pop();
     }
 }

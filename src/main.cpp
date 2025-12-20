@@ -14,26 +14,25 @@ int main()
     InitWindow(WINDOW_SIZE.x, WINDOW_SIZE.y, WINDOW_TITLE);
     SetTargetFPS(60);
 
-    initGameState(gameState);
+    InitGameState(gameState);
 
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        // debug
-        DrawFPS(10, 10);
-        // debug end
-
         // update
-        updateGameState(gameState);
+        UpdateGameState(gameState);
         // update end
 
         // draw
-        drawMainScreen(gameState);
+        DrawMainScreen(gameState);
         // draw end
 
+        // debug
+        DrawFPS(10, 10);
         __ProcessDebugDraws();
+        // debug end
 
         EndDrawing();
     }
