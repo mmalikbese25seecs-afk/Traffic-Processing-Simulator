@@ -38,7 +38,7 @@ bool m_canCarMove(const Car &car, const GameState &state)
     return true;
 }
 
-void UpdateCar(Car &car, const GameState &state)
+void m_DebugDrawCarArc(const Car &car)
 {
     if (DEBUG_CAR_DETECTION_ARC)
     {
@@ -67,7 +67,10 @@ void UpdateCar(Car &car, const GameState &state)
         __DebugDrawVectorAt(car.position, arcA, CAR_DETECTION_RADIUS, 2, false, YELLOW);
         __DebugDrawVectorAt(car.position, arcB, CAR_DETECTION_RADIUS, 2, false, YELLOW);
     }
+}
 
+void UpdateCar(Car &car, const GameState &state)
+{
     if (!CanCarPass(state.trafficLightGroup, car) || !m_canCarMove(car, state))
         StopCar(car);
     else
@@ -97,6 +100,8 @@ void DrawCar(const Car &car)
         car.size.y / 2.f //
     };
     DrawRectanglePro(carRect, origin, car.rotation, car.color);
+
+    m_DebugDrawCarArc(car);
 }
 
 void SetCarVelocity(Car &car, Vector2 newVelocity)

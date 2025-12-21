@@ -5,6 +5,8 @@
 
 #include "VectorMath.hpp"
 
+#define DEBUG_DRAW_ENABLED 1
+
 struct __DebugLine
 {
     Vector2 start;
@@ -38,11 +40,13 @@ inline std::queue<__DebugCircleArc> g_DebugCircleArcs;
 /// @param radius [OPTIONAL] Default `5.f`
 inline void __DebugDrawPoint(const Vector2 &position, float radius = 5.f, Color color = RED)
 {
+#if DEBUG_DRAW_ENABLED
     __DebugPoint point;
     point.position = position;
     point.color = color;
     point.radius = radius;
     g_DebugPoints.push(point);
+#endif
 }
 
 /// @brief Draws `vector` at given `origin`; Call every frame
@@ -50,6 +54,7 @@ inline void __DebugDrawPoint(const Vector2 &position, float radius = 5.f, Color 
 /// @param scale [OPTIONAL] Default `1.f`
 inline void __DebugDrawVectorAt(const Vector2 &origin, const Vector2 &vector, float scale = 1.f, int thickness = 5, bool highlightPoints = true, Color color = RED)
 {
+#if DEBUG_DRAW_ENABLED
     // using queue because we process then delete
     __DebugLine line;
     line.start = origin;
@@ -63,12 +68,14 @@ inline void __DebugDrawVectorAt(const Vector2 &origin, const Vector2 &vector, fl
         __DebugDrawPoint(origin, thickness * 2.f, color);
         __DebugDrawPoint(line.end, thickness * 2.f, color);
     }
+#endif
 }
 
 /// @brief Draws line from point `a` to `b`; Call every frame
 /// @param color [OPTIONAL] Default `RED`
 inline void __DebugDrawVectorAB(const Vector2 &a, const Vector2 &b, int thickness = 5, bool highlightPoints = true, Color color = RED)
 {
+#if DEBUG_DRAW_ENABLED
     __DebugLine line;
     line.start = a;
     line.end = b;
@@ -81,6 +88,7 @@ inline void __DebugDrawVectorAB(const Vector2 &a, const Vector2 &b, int thicknes
         __DebugDrawPoint(a, thickness * 2.f, color);
         __DebugDrawPoint(b, thickness * 2.f, color);
     }
+#endif
 }
 
 /// @brief Call every frame
@@ -92,6 +100,7 @@ inline void __DebugDrawCircleArc(
     float endAngle = 360.f,
     Color color = RED)
 {
+#if DEBUG_DRAW_ENABLED
     float start = AngleNormalizeDeg(startAngle);
     float end = AngleNormalizeDeg(endAngle);
 
@@ -132,10 +141,12 @@ inline void __DebugDrawCircleArc(
             g_DebugCircleArcs.push(circle);
         }
     }
+#endif
 }
 
 inline void __ProcessDebugDraws()
 {
+#if DEBUG_DRAW_ENABLED
     // draw lines of each frame, the next frame clears the previous line
     while (!g_DebugCircleArcs.empty())
     {
@@ -157,4 +168,6 @@ inline void __ProcessDebugDraws()
         DrawCircleV(point.position, point.radius, point.color);
         g_DebugPoints.pop();
     }
+
+#endif
 }

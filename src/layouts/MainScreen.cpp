@@ -3,6 +3,7 @@
 #include "WindowConfig.hpp"
 #include "Roads.hpp"
 #include "Debug.hpp"
+#include "RandomGen.hpp"
 
 void m_spawnCars(GameState &state)
 {
@@ -25,6 +26,10 @@ void m_spawnCars(GameState &state)
 
     auto addCarLambda = [&](const Vector2 &position, const Vector2 &velocity, const Vector2 &size)
     {
+        // skip based on random chance
+        if (!GetRandomChance(MAIN_SCREEN_CAR_SKIP_SPAWN_CHANCE))
+            return;
+
         Car newCar = {
             .position = position,
             .size = size,
@@ -155,11 +160,6 @@ void UpdateGameState(GameState &state)
     if (state.paused)
         return;
 
-    __DebugDrawPoint(state.trafficLightGroup.trafficLights[0].waitingPosition, 8.f, MAGENTA);
-    __DebugDrawPoint(state.trafficLightGroup.trafficLights[1].waitingPosition, 8.f, MAGENTA);
-    __DebugDrawPoint(state.trafficLightGroup.trafficLights[2].waitingPosition, 8.f, MAGENTA);
-    __DebugDrawPoint(state.trafficLightGroup.trafficLights[3].waitingPosition, 8.f, MAGENTA);
-
     state.deltaTime = GetFrameTime();
 
     m_updateCarSpawning(state);
@@ -189,6 +189,17 @@ void ResumeGameState(GameState &state)
     state.paused = false;
 }
 
+void m_debugDrawGameState(const GameState &state)
+{
+    if (MAIN_SCREEN_DEBUG_DRAW_TRAFFIC_LIGHT_POSITIONS)
+    {
+        for (const auto &light : state.trafficLightGroup.trafficLights)
+        {
+            __DebugDrawPoint(light.waitingPosition, 8.f, MAGENTA);
+        }
+    }
+}
+
 void DrawMainScreen(const GameState &state)
 {
     DrawRoads();
@@ -198,4 +209,6 @@ void DrawMainScreen(const GameState &state)
     {
         DrawCar(car);
     }
+
+    m_debugDrawGameState(state);
 }
