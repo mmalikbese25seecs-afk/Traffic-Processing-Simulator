@@ -6,6 +6,7 @@
 #include "Car.hpp"
 #include "VectorMath.hpp"
 #include "MainScreen.hpp"
+#include "Debug.hpp"
 
 void UpdateTrafficLights(GameState &state)
 {
@@ -91,20 +92,41 @@ void ForceUpdateTrafficLights(GameState &state)
 bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
 {
     // get shortest distance from traffic light to car
-    TrafficLight closestLight;
+    const TrafficLight *closestLight = nullptr;
     float shortestDistance = std::numeric_limits<float>::max();
-    for (auto trafficLight : trafficLight.trafficLights)
+    for (const auto &trafficLight : trafficLight.trafficLights)
     {
         float distance = Vector2Distance(trafficLight.position, car.position);
         if (distance < shortestDistance)
         {
             shortestDistance = distance;
-            closestLight = trafficLight;
+            closestLight = &trafficLight;
         }
     }
 
+    if (!closestLight)
+        return true;
+
+    // check if car has passed the traffic light
+    bool hasPassedTrafficLight = Vector2AfterPoint(car.position, closestLight->position, closestLight->direction);
+
+    if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+    {
+        Color debugColor = hasPassedTrafficLight ? GREEN : RED;
+        // draw vector from car to traffic light
+        Vector2 carToLight = {
+            closestLight->position.x - car.position.x,
+            closestLight->position.y - car.position.y //
+        };
+        __DebugDrawVector(car.position, carToLight, 1.f, 2, debugColor);
+
+        // draw points
+        __DebugDrawPoint(car.position, 4.f, debugColor);
+        __DebugDrawPoint(closestLight->position, 4.f, debugColor);
+    }
+    
     // car has passed the traffic light
-    if (Vector2Dot(GetCarVelocity(car), closestLight.direction) < 0.f)
+    if (hasPassedTrafficLight)
         return true;
 
     // far away from traffic light
@@ -112,9 +134,9 @@ bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
         return true;
 
     // check if car is moving towards signal
-    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight.direction);
+    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
 
-    if (movingTowardsSignal && !closestLight.isOn)
+    if (movingTowardsSignal && !closestLight->isOn)
         return false;
 
     return true;

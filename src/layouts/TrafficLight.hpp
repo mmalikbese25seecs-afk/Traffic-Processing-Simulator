@@ -6,6 +6,8 @@
 struct Car;
 struct GameState;
 
+constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS = true;
+
 // traffic light
 constexpr float TRAFFIC_LIGHT_RADIUS = 10.f;
 constexpr Color TRAFFIC_LIGHT_ON_COLOR = GREEN;

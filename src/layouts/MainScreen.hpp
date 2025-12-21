@@ -23,6 +23,7 @@ struct GameState
 void InitGameState(GameState &state);
 void UpdateGameState(GameState &state);
 void RestartGameState(GameState &state);
+
 void PauseGameState(GameState &state);
 void ResumeGameState(GameState &state);
 

@@ -94,8 +94,8 @@ void UpdateCar(Car &car, const GameState &state)
 void DrawCar(const Car &car)
 {
     Rectangle carRect = {
-        .x = car.position.x - car.size.x / 2,
-        .y = car.position.y - car.size.y / 2,
+        .x = car.position.x,
+        .y = car.position.y,
         .width = car.size.x,
         .height = car.size.y //
     };
