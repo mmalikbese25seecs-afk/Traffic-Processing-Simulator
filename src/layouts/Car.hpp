@@ -3,11 +3,14 @@
 
 struct GameState;
 
+constexpr bool DEBUG_CAR_DETECTION_ARC = false;
+constexpr bool DEBUG_CAR_DETECTION_OTHER_CARS = false;
+
 constexpr float CAR_WIDTH = 20.f;
 constexpr float CAR_HEIGHT = 40.f;
 constexpr float CAR_SPEED = 100.f;
 // distance from car to other car to stop
-constexpr float CAR_REAR_END_DISTANCE = 50.f;
+constexpr float CAR_DETECTION_RADIUS = 50.f;
 
 struct Car
 {

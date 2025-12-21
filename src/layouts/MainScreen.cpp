@@ -32,33 +32,6 @@ void m_spawnCars(GameState &state)
         };
         state.cars.push_back(newCar);
     };
-    // for (int i = 0; i < NUM_CARS_PER_DIRECTION; ++i)
-    // {
-    //     // bottom to top
-    //     addCarLambda(
-    //         {bottomCarStartPos.x, bottomCarStartPos.y + i * SPACING},
-    //         {0.f, -CAR_SPEED},
-    //         {CAR_WIDTH, CAR_HEIGHT} //
-    //     );
-    //     // top to bottom
-    //     addCarLambda(
-    //         {topCarStartPos.x, topCarStartPos.y - i * SPACING},
-    //         {0.f, CAR_SPEED},
-    //         {CAR_WIDTH, CAR_HEIGHT} //
-    //     );
-    //     // left to right
-    //     addCarLambda(
-    //         {leftCarStartPos.x - i * SPACING, leftCarStartPos.y},
-    //         {CAR_SPEED, 0.f},
-    //         {CAR_HEIGHT, CAR_WIDTH} //
-    //     );
-    //     // right to left
-    //     addCarLambda(
-    //         {rightCarStartPos.x + i * SPACING, rightCarStartPos.y},
-    //         {-CAR_SPEED, 0.f},
-    //         {CAR_HEIGHT, CAR_WIDTH} //
-    //     );
-    // }
     // bottom to top
     addCarLambda(
         {bottomCarStartPos.x, bottomCarStartPos.y + SPACING},
@@ -149,6 +122,16 @@ void RestartGameState(GameState &state)
     ForceUpdateTrafficLights(state);
     state.cars.clear();
     InitGameState(state);
+}
+
+void PauseGameState(GameState &state)
+{
+    state.paused = true;
+}
+
+void ResumeGameState(GameState &state)
+{
+    state.paused = false;
 }
 
 void DrawMainScreen(const GameState &state)

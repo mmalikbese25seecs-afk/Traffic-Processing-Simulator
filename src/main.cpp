@@ -25,6 +25,13 @@ int main()
         {
             RestartGameState(gameState);
         }
+        else if (IsKeyPressed(KEY_P))
+        {
+            if (gameState.paused)
+                ResumeGameState(gameState);
+            else
+                PauseGameState(gameState);
+        }
 
         // update
         UpdateGameState(gameState);

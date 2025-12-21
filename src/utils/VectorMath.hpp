@@ -5,7 +5,7 @@
 
 inline void WrapAngle(float &angle, bool degrees)
 {
-    float fullCircle = degrees ? 360.f : 2.f * M_PI;
+    float fullCircle = degrees ? 360.f : 2.f * PI;
     angle = fmodf(angle, fullCircle); // fmodf = % for floats
     if (angle < 0)
         angle += fullCircle;
@@ -14,13 +14,21 @@ inline void WrapAngle(float &angle, bool degrees)
 inline float AngleToRadians(float degrees)
 {
     WrapAngle(degrees, true);
-    return degrees * (M_PI / 180.f);
+    return degrees * (PI / 180.f);
 }
 
 inline float AngleToDegrees(float radians)
 {
     WrapAngle(radians, false);
-    return radians * (180.f / M_PI);
+    return radians * (180.f / PI);
+}
+
+inline float AngleNormalizeDeg(float angle)
+{
+    angle = fmodf(angle, 360.0f);
+    if (angle < 0.0f)
+        angle += 360.0f;
+    return angle;
 }
 
 inline float Vector2Dot(const Vector2 &v1, const Vector2 &v2)
@@ -69,9 +77,20 @@ inline bool Vector2Aligned(const Vector2 &v1, const Vector2 &v2, float tolerance
 
     float angleDiff = angle1 - angle2;
     // wrap to [-pi, pi]
-    angleDiff = fmodf(angleDiff + M_PI, 2.f * M_PI) - M_PI;
+    angleDiff = fmodf(angleDiff + PI, 2.f * PI) - PI;
     // absolute value; so works for both sides
     angleDiff = fabsf(angleDiff);
 
     return angleDiff <= AngleToRadians(toleranceAngleDegrees);
+}
+
+inline Vector2 Vector2Rotate(const Vector2 &v, float angleInDegrees)
+{
+    float radians = AngleToRadians(angleInDegrees);
+    float c = cosf(radians);
+    float s = sinf(radians);
+    return {
+        v.x * c - v.y * s,
+        v.x * s + v.y * c //
+    };
 }
