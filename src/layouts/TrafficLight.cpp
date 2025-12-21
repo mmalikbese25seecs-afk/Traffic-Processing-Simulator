@@ -167,13 +167,13 @@ bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
     if (!closestLight)
         return true;
 
+    // far away from traffic light -> ignore it until close enough
+    if (shortestDistance > TRAFFIC_LIGHT_CAR_DETECTION_RANGE)
+        return true;
+
     // check if car has passed the traffic light
     bool hasPassedTrafficLight = Vector2AfterPoint(car.position, closestLight->position, closestLight->direction);
     if (hasPassedTrafficLight)
-        return true;
-
-    // far away from traffic light -> ignore it until close enough
-    if (shortestDistance > TRAFFIC_LIGHT_STOP_DISTANCE)
         return true;
 
     // check if car is moving towards signal
@@ -185,17 +185,25 @@ bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
     if (closestLight->state == TrafficLightState::GO)
     {
         if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
-        {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, GREEN);
-        }
         return true;
     }
     else if (closestLight->state == TrafficLightState::STOP)
     {
-        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        // allow pass if before waiting position
+        bool carBeforeWaitingPos = Vector2AfterPoint(closestLight->waitingPosition, car.position, closestLight->direction);
+        if (carBeforeWaitingPos)
         {
-            __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
+            if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+                __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
+
+            return true;
         }
+
+        // else stop
+        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+            __DebugDrawVectorAB(car.position, closestLight->position, 2, true, Fade(RED, 0.5f));
+
         return false;
     }
     else // WAIT (yellow)
@@ -210,9 +218,7 @@ bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
         bool tooCloseToStop = shortestDistance <= minDistanceToStop;
 
         if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
-        {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, ORANGE);
-        }
 
         // if too close, allow to move to clear intersection; otherwise stop
         return tooCloseToStop;

@@ -17,7 +17,7 @@ constexpr Color TRAFFIC_LIGHT_OFF_COLOR = RED;
 constexpr Color TRAFFIC_LIGHT_BG_COLOR = BLACK;
 constexpr float TRAFFIC_LIGHT_BG_PADDING = 5.f;
 // distance from traffic light to stop car
-constexpr float TRAFFIC_LIGHT_STOP_DISTANCE = 50.f;
+constexpr float TRAFFIC_LIGHT_CAR_DETECTION_RANGE = 50.f;
 constexpr float TRAFFIC_LIGHT_CAP_DISTANCE = 25.f;
 
 // realistic timing (seconds)
@@ -46,6 +46,8 @@ struct TrafficLight
 {
     Vector2 position;
     Vector2 direction;
+    // position where cars should stop when orange light
+    Vector2 waitingPosition;
     TrafficLightState state;
 };
 

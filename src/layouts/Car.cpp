@@ -40,9 +40,6 @@ bool m_canCarMove(const Car &car, const GameState &state)
 
 void UpdateCar(Car &car, const GameState &state)
 {
-    if (state.paused)
-        return;
-
     if (DEBUG_CAR_DETECTION_ARC)
     {
         if (Vector2IsZero(car.desiredVelocity))

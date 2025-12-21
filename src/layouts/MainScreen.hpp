@@ -8,11 +8,12 @@
 
 constexpr float START_OFFSET = -10.f;
 constexpr float SPACING = 50.f;
+constexpr float TRAFFIC_LIGHT_WAIT_POS_OFFSET = 20.f;
 
 struct GameState
 {
     TrafficLightGroup trafficLightGroup;
-    float carsPerSecond = 1.f;
+    float carsPerSecond = 0.5f;
 
     std::vector<Car> cars;
     float deltaTime = 0.f;

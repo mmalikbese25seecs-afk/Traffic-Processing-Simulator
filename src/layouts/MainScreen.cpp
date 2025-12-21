@@ -7,11 +7,11 @@
 void m_spawnCars(GameState &state)
 {
     Vector2 bottomCarStartPos = {
-        WINDOW_CENTER.x + ROAD_SIZE / 4,
+        WINDOW_CENTER.x - ROAD_SIZE / 4,
         WINDOW_SIZE.y + START_OFFSET //
     };
     Vector2 topCarStartPos = {
-        WINDOW_CENTER.x - ROAD_SIZE / 4,
+        WINDOW_CENTER.x + ROAD_SIZE / 4,
         -START_OFFSET //
     };
     Vector2 leftCarStartPos = {
@@ -78,12 +78,58 @@ void InitGameState(GameState &state)
         WINDOW_CENTER.y //
     };
 
-    state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, 1}, TrafficLightState::GO};
-    state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {1, 0}, TrafficLightState::STOP};
-    state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, -1}, TrafficLightState::GO};
-    state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {-1, 0}, TrafficLightState::STOP};
+    state.trafficLightGroup.trafficLights[0] = TrafficLight{
+        topRoadLightPos,
+        {0, 1},
+        {
+            topRoadLightPos.x + ROAD_SIZE / 4,
+            topRoadLightPos.y - TRAFFIC_LIGHT_WAIT_POS_OFFSET //
+        },
+        TrafficLightState::GO //
+    };
+    state.trafficLightGroup.trafficLights[1] = TrafficLight{
+        leftRoadLightPos,
+        {1, 0},
+        {
+            leftRoadLightPos.x - TRAFFIC_LIGHT_WAIT_POS_OFFSET,
+            leftRoadLightPos.y - ROAD_SIZE / 4 //
+        },
+        TrafficLightState::STOP //
+    };
+    state.trafficLightGroup.trafficLights[2] = TrafficLight{
+        bottomRoadLightPos,
+        {0, -1},
+        {
+            bottomRoadLightPos.x - ROAD_SIZE / 4,
+            bottomRoadLightPos.y + TRAFFIC_LIGHT_WAIT_POS_OFFSET //
+        },
+        TrafficLightState::GO //
+    };
+    state.trafficLightGroup.trafficLights[3] = TrafficLight{
+        rightRoadLightPos,
+        {-1, 0},
+        {
+            rightRoadLightPos.x + TRAFFIC_LIGHT_WAIT_POS_OFFSET,
+            rightRoadLightPos.y + ROAD_SIZE / 4 //
+        },
+        TrafficLightState::STOP //
+    };
     state.trafficLightGroup.currentGroup = true;
     ForceUpdateTrafficLights(state);
+}
+
+void m_cleanupCars(GameState &state)
+{
+    state.cars.erase(
+        std::remove_if(
+            state.cars.begin(),
+            state.cars.end(),
+            [](const Car &car)
+            {
+                return (car.position.x < -100.f || car.position.x > WINDOW_SIZE.x + 100.f ||
+                        car.position.y < -100.f || car.position.y > WINDOW_SIZE.y + 100.f);
+            }),
+        state.cars.end());
 }
 
 void m_updateCarSpawning(GameState &state)
@@ -99,23 +145,21 @@ void m_updateCarSpawning(GameState &state)
 
     // code below runs once per interval
     m_spawnCars(state);
-    // remove cars that are out of bounds
-    state.cars.erase(
-        std::remove_if(
-            state.cars.begin(),
-            state.cars.end(),
-            [](const Car &car)
-            {
-                return (car.position.x < -100.f || car.position.x > WINDOW_SIZE.x + 100.f ||
-                        car.position.y < -100.f || car.position.y > WINDOW_SIZE.y + 100.f);
-            }),
-        state.cars.end());
+    m_cleanupCars(state);
 
     lastTick = currentTick;
 }
 
 void UpdateGameState(GameState &state)
 {
+    if (state.paused)
+        return;
+
+    __DebugDrawPoint(state.trafficLightGroup.trafficLights[0].waitingPosition, 8.f, MAGENTA);
+    __DebugDrawPoint(state.trafficLightGroup.trafficLights[1].waitingPosition, 8.f, MAGENTA);
+    __DebugDrawPoint(state.trafficLightGroup.trafficLights[2].waitingPosition, 8.f, MAGENTA);
+    __DebugDrawPoint(state.trafficLightGroup.trafficLights[3].waitingPosition, 8.f, MAGENTA);
+
     state.deltaTime = GetFrameTime();
 
     m_updateCarSpawning(state);
