@@ -20,5 +20,6 @@ struct GameState
 
 void InitGameState(GameState &state);
 void UpdateGameState(GameState &state);
+void RestartGameState(GameState &state);
 
 void DrawMainScreen(const GameState &state);

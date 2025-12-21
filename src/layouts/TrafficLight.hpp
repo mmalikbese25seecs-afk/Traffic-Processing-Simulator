@@ -35,4 +35,6 @@ void UpdateTrafficLights(GameState &state);
 void SwitchTrafficLights(TrafficLightGroup &group);
 void DrawTrafficLightGroup(const TrafficLightGroup &light);
 
+void ForceUpdateTrafficLights(GameState &state);
+
 bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car);

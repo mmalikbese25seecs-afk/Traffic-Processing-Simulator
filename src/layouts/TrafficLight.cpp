@@ -83,6 +83,11 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
     }
 }
 
+void ForceUpdateTrafficLights(GameState &state)
+{
+    SwitchTrafficLights(state.trafficLightGroup);
+}
+
 bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
 {
     // get shortest distance from traffic light to car

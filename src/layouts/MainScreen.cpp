@@ -29,6 +29,7 @@ void InitGameState(GameState &state)
     state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, -1}, false};
     state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {-1, 0}, false};
     state.trafficLightGroup.currentGroup = true;
+    ForceUpdateTrafficLights(state);
 
     // cars
     Vector2 bottomCarStartPos = {
@@ -91,11 +92,19 @@ void UpdateGameState(GameState &state)
     state.deltaTime = GetFrameTime();
 
     UpdateTrafficLights(state);
-
     for (auto &car : state.cars)
     {
         UpdateCar(car, state);
     }
+}
+
+void RestartGameState(GameState &state)
+{
+    // clear existing state
+    state.trafficLightGroup = TrafficLightGroup{};
+    ForceUpdateTrafficLights(state);
+    state.cars.clear();
+    InitGameState(state);
 }
 
 void DrawMainScreen(const GameState &state)

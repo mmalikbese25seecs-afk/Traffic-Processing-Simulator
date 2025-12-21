@@ -21,6 +21,11 @@ int main()
         BeginDrawing();
         ClearBackground(BLACK);
 
+        if (IsKeyPressed(KEY_R))
+        {
+            RestartGameState(gameState);
+        }
+
         // update
         UpdateGameState(gameState);
         // update end
