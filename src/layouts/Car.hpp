@@ -6,8 +6,8 @@ struct GameState;
 constexpr bool DEBUG_CAR_DETECTION_ARC = false;
 constexpr bool DEBUG_CAR_DETECTION_OTHER_CARS = false;
 
-constexpr float CAR_WIDTH = 20.f;
-constexpr float CAR_HEIGHT = 40.f;
+constexpr float CAR_WIDTH = 40.f;
+constexpr float CAR_HEIGHT = 20.f;
 constexpr float CAR_SPEED = 100.f;
 // distance from car to other car to stop
 constexpr float CAR_DETECTION_RADIUS = 50.f;
@@ -18,6 +18,7 @@ struct Car
     Vector2 size;
     Vector2 desiredVelocity; // where the car wants to go
     Color color = BLUE;
+    float rotation = 0.f;
 
     Vector2 _velocity; // current velocity
 };

@@ -48,13 +48,13 @@ void m_spawnCars(GameState &state)
     addCarLambda(
         {leftCarStartPos.x - SPACING, leftCarStartPos.y},
         {CAR_SPEED, 0.f},
-        {CAR_HEIGHT, CAR_WIDTH} //
+        {CAR_WIDTH, CAR_HEIGHT} //
     );
     // right to left
     addCarLambda(
         {rightCarStartPos.x + SPACING, rightCarStartPos.y},
         {-CAR_SPEED, 0.f},
-        {CAR_HEIGHT, CAR_WIDTH} //
+        {CAR_WIDTH, CAR_HEIGHT} //
     );
 }
 
@@ -99,6 +99,17 @@ void m_updateCarSpawning(GameState &state)
 
     // code below runs once per interval
     m_spawnCars(state);
+    // remove cars that are out of bounds
+    state.cars.erase(
+        std::remove_if(
+            state.cars.begin(),
+            state.cars.end(),
+            [](const Car &car)
+            {
+                return (car.position.x < -100.f || car.position.x > WINDOW_SIZE.x + 100.f ||
+                        car.position.y < -100.f || car.position.y > WINDOW_SIZE.y + 100.f);
+            }),
+        state.cars.end());
 
     lastTick = currentTick;
 }

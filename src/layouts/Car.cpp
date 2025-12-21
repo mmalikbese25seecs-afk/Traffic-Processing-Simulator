@@ -89,6 +89,13 @@ void UpdateCar(Car &car, const GameState &state)
         ResumeCar(car);
 
     m_updateVelocity(car, state);
+
+    // only update rotation if velocity is non-zero
+    Vector2 vel = GetCarVelocity(car);
+    if (!Vector2IsZero(vel))
+    {
+        car.rotation = AngleToDegrees(atan2f(vel.y, vel.x));
+    }
 }
 
 void DrawCar(const Car &car)
@@ -99,7 +106,8 @@ void DrawCar(const Car &car)
         .width = car.size.x,
         .height = car.size.y //
     };
-    DrawRectangleRec(carRect, car.color);
+    // DrawRectangleRec(carRect, car.color);
+    DrawRectanglePro(carRect, {car.size.x / 2.f, car.size.y / 2.f}, car.rotation, car.color);
 }
 
 void SetCarVelocity(Car &car, Vector2 newVelocity)
