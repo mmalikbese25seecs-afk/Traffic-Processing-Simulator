@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 #include "Car.hpp"
 #include "VectorMath.hpp"
@@ -10,42 +11,84 @@
 
 void UpdateTrafficLights(GameState &state)
 {
-    const double time = GetTime();
-    const int interval = TRAFFIC_LIGHT_SWITCH_INTERVAL; // seconds
+    double timeNow = GetTime();
+    TrafficLightGroup &group = state.trafficLightGroup;
 
-    static int lastTick = -1;
-    const int currentTick = static_cast<int>(time) / interval;
+    // initialize phaseStartTime if zero
+    if (group.phaseStartTime <= 0.0)
+        group.phaseStartTime = timeNow;
 
-    if (currentTick == lastTick)
-        return;
+    double elapsed = timeNow - group.phaseStartTime;
+    float phaseDuration = 0.f;
 
-    // code below runs once per interval
-    SwitchTrafficLights(state.trafficLightGroup);
+    switch (group.phase)
+    {
+    case TrafficLightGroupPhase::GREEN_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_GREEN_DURATION;
+        break;
+    case TrafficLightGroupPhase::YELLOW_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_YELLOW_DURATION;
+        break;
+    case TrafficLightGroupPhase::ALL_RED_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_ALL_RED_DURATION;
+        break;
+    }
 
-    lastTick = currentTick;
+    if (elapsed >= phaseDuration)
+    {
+        // advance to the next phase
+        SwitchTrafficLights(group);
+    }
 }
 
+// Advances the traffic light group's phase machine:
+// GREEN_PHASE -> YELLOW_PHASE (current group's lights become WAIT)
+// YELLOW_PHASE -> ALL_RED_PHASE (both groups STOP)
+// ALL_RED_PHASE -> GREEN_PHASE (toggle currentGroup; that group's lights become GO)
 void SwitchTrafficLights(TrafficLightGroup &group)
 {
-    if (group.currentGroup)
-    {
-        // turn off 0, 2; turn on 1, 3
-        group.trafficLights[0].isOn = false;
-        group.trafficLights[1].isOn = true;
-        group.trafficLights[2].isOn = false;
-        group.trafficLights[3].isOn = true;
-    }
-    else
-    {
-        // turn on 0, 2; turn off 1, 3
-        group.trafficLights[0].isOn = true;
-        group.trafficLights[1].isOn = false;
-        group.trafficLights[2].isOn = true;
-        group.trafficLights[3].isOn = false;
-    }
+    double now = GetTime();
 
-    // toggle state
-    group.currentGroup = !group.currentGroup;
+    switch (group.phase)
+    {
+    case TrafficLightGroupPhase::GREEN_PHASE:
+    {
+        // Start yellow for the currently green pair
+        for (size_t i = 0; i < group.trafficLights.size(); ++i)
+        {
+            bool isCurrentPair = (group.currentGroup && (i == 0 || i == 2)) || (!group.currentGroup && (i == 1 || i == 3));
+            if (isCurrentPair)
+                group.trafficLights[i].state = TrafficLightState::WAIT;
+            else
+                group.trafficLights[i].state = TrafficLightState::STOP;
+        }
+        group.phase = TrafficLightGroupPhase::YELLOW_PHASE;
+        group.phaseStartTime = now;
+        break;
+    }
+    case TrafficLightGroupPhase::YELLOW_PHASE:
+    {
+        // All-red: everyone STOP for a short safety interval
+        for (auto &light : group.trafficLights)
+            light.state = TrafficLightState::STOP;
+        group.phase = TrafficLightGroupPhase::ALL_RED_PHASE;
+        group.phaseStartTime = now;
+        break;
+    }
+    case TrafficLightGroupPhase::ALL_RED_PHASE:
+    {
+        // End of cycle: toggle which pair is green and give them GO
+        group.currentGroup = !group.currentGroup;
+        for (size_t i = 0; i < group.trafficLights.size(); ++i)
+        {
+            bool isCurrentPair = (group.currentGroup && (i == 0 || i == 2)) || (!group.currentGroup && (i == 1 || i == 3));
+            group.trafficLights[i].state = isCurrentPair ? TrafficLightState::GO : TrafficLightState::STOP;
+        }
+        group.phase = TrafficLightGroupPhase::GREEN_PHASE;
+        group.phaseStartTime = now;
+        break;
+    }
+    }
 }
 
 void DrawTrafficLightGroup(const TrafficLightGroup &light)
@@ -78,8 +121,16 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
         DrawTriangle(leftPoint, topPoint, rightPoint, TRAFFIC_LIGHT_BG_COLOR);
         // draw outline circle
         DrawCircleV(trafficLight.position, TRAFFIC_LIGHT_RADIUS + TRAFFIC_LIGHT_BG_PADDING, TRAFFIC_LIGHT_BG_COLOR);
-        // draw colored circle
-        Color trafficLightColor = trafficLight.isOn ? TRAFFIC_LIGHT_ON_COLOR : TRAFFIC_LIGHT_OFF_COLOR;
+
+        // draw colored circle based on state
+        Color trafficLightColor = TRAFFIC_LIGHT_OFF_COLOR;
+        if (trafficLight.state == TrafficLightState::GO)
+            trafficLightColor = TRAFFIC_LIGHT_ON_COLOR;
+        else if (trafficLight.state == TrafficLightState::WAIT)
+            trafficLightColor = TRAFFIC_LIGHT_YELLOW_COLOR;
+        else
+            trafficLightColor = TRAFFIC_LIGHT_OFF_COLOR;
+
         DrawCircleV(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
     }
 }
@@ -89,18 +140,27 @@ void ForceUpdateTrafficLights(GameState &state)
     SwitchTrafficLights(state.trafficLightGroup);
 }
 
-bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
+// Behavior:
+//  - If already past the light -> allow.
+//  - If far away               -> allow.
+//  - If moving toward the signal:
+//      * GO            -> allow
+//      * WAIT (yellow) -> allow only if car is too close to stop
+//      * STOP          -> do not allow
+//  - Otherwise allow.
+bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
 {
     // get shortest distance from traffic light to car
     const TrafficLight *closestLight = nullptr;
     float shortestDistance = std::numeric_limits<float>::max();
-    for (const auto &trafficLight : trafficLight.trafficLights)
+
+    for (const TrafficLight &light : trafficLightGroup.trafficLights)
     {
-        float distance = Vector2Distance(trafficLight.position, car.position);
+        float distance = Vector2Distance(light.position, car.position);
         if (distance < shortestDistance)
         {
             shortestDistance = distance;
-            closestLight = &trafficLight;
+            closestLight = &light;
         }
     }
 
@@ -109,35 +169,52 @@ bool CanCarPass(const TrafficLightGroup &trafficLight, const Car &car)
 
     // check if car has passed the traffic light
     bool hasPassedTrafficLight = Vector2AfterPoint(car.position, closestLight->position, closestLight->direction);
-
-    if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
-    {
-        Color debugColor = hasPassedTrafficLight ? GREEN : RED;
-        // draw vector from car to traffic light
-        Vector2 carToLight = {
-            closestLight->position.x - car.position.x,
-            closestLight->position.y - car.position.y //
-        };
-        __DebugDrawVector(car.position, carToLight, 1.f, 2, debugColor);
-
-        // draw points
-        __DebugDrawPoint(car.position, 4.f, debugColor);
-        __DebugDrawPoint(closestLight->position, 4.f, debugColor);
-    }
-    
-    // car has passed the traffic light
     if (hasPassedTrafficLight)
         return true;
 
-    // far away from traffic light
+    // far away from traffic light -> ignore it until close enough
     if (shortestDistance > TRAFFIC_LIGHT_STOP_DISTANCE)
         return true;
 
     // check if car is moving towards signal
     bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
+    if (!movingTowardsSignal)
+        return true;
 
-    if (movingTowardsSignal && !closestLight->isOn)
+    // determine behavior based on light state
+    if (closestLight->state == TrafficLightState::GO)
+    {
+        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        {
+            __DebugDrawVectorAB(car.position, closestLight->position, 2, true, GREEN);
+        }
+        return true;
+    }
+    else if (closestLight->state == TrafficLightState::STOP)
+    {
+        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        {
+            __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
+        }
         return false;
+    }
+    else // WAIT (yellow)
+    {
+        // approximate car speed (length of desired velocity)
+        float speed = Vector2Length(car.desiredVelocity);
 
-    return true;
+        // approximate minimum distance needed to stop in time.
+        // distance = speed * reaction_time + buffer
+        float minDistanceToStop = speed * 1.5f + 5.f;
+
+        bool tooCloseToStop = shortestDistance <= minDistanceToStop;
+
+        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        {
+            __DebugDrawVectorAB(car.position, closestLight->position, 2, true, ORANGE);
+        }
+
+        // if too close, allow to move to clear intersection; otherwise stop
+        return tooCloseToStop;
+    }
 }

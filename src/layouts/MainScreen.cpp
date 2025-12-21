@@ -78,10 +78,10 @@ void InitGameState(GameState &state)
         WINDOW_CENTER.y //
     };
 
-    state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, 1}, true};
-    state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {1, 0}, false};
-    state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, -1}, false};
-    state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {-1, 0}, false};
+    state.trafficLightGroup.trafficLights[0] = TrafficLight{topRoadLightPos, {0, 1}, TrafficLightState::GO};
+    state.trafficLightGroup.trafficLights[1] = TrafficLight{leftRoadLightPos, {1, 0}, TrafficLightState::STOP};
+    state.trafficLightGroup.trafficLights[2] = TrafficLight{bottomRoadLightPos, {0, -1}, TrafficLightState::GO};
+    state.trafficLightGroup.trafficLights[3] = TrafficLight{rightRoadLightPos, {-1, 0}, TrafficLightState::STOP};
     state.trafficLightGroup.currentGroup = true;
     ForceUpdateTrafficLights(state);
 }

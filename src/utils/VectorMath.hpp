@@ -97,7 +97,8 @@ inline Vector2 Vector2Rotate(const Vector2 &v, float angleInDegrees)
 
 /// @brief if `pointA` is past the `upVector` from `pointB`
 /// @param upVector The reference direction vector; up vector
-inline bool Vector2AfterPoint(const Vector2 &pointA, const Vector2 &pointB, const Vector2 &upVector)
+/// @param toleranceAngleDegrees Angle tolerance
+inline bool Vector2AfterPoint(const Vector2 &pointA, const Vector2 &pointB, const Vector2 &upVector, float toleranceAngleDegrees = 90.f)
 {
     Vector2 dirToTarget = {pointA.x - pointB.x, pointA.y - pointB.y};
     Vector2Normalize(dirToTarget);
@@ -106,7 +107,7 @@ inline bool Vector2AfterPoint(const Vector2 &pointA, const Vector2 &pointB, cons
     Vector2Normalize(refDirNorm);
 
     float dot = Vector2Dot(dirToTarget, refDirNorm);
-    float cosThreshold = cosf(AngleToRadians(90.f));
+    float cosThreshold = cosf(AngleToRadians(toleranceAngleDegrees));
 
     return dot > cosThreshold;
 }

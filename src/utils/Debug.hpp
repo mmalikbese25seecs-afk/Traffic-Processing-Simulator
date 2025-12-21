@@ -35,20 +35,6 @@ inline std::queue<__DebugCircleArc> g_DebugCircleArcs;
 
 /// @brief Call every frame
 /// @param color [OPTIONAL] Default `RED`
-/// @param scale [OPTIONAL] Default `1.f`
-inline void __DebugDrawVector(const Vector2 &origin, const Vector2 &vector, float scale = 1.f, int thickness = 5, Color color = RED)
-{
-    // using queue because we process then delete
-    __DebugLine line;
-    line.start = origin;
-    line.end = {origin.x + vector.x * scale, origin.y + vector.y * scale};
-    line.color = color;
-    line.thickness = thickness;
-    g_DebugLines.push(line);
-}
-
-/// @brief Call every frame
-/// @param color [OPTIONAL] Default `RED`
 /// @param radius [OPTIONAL] Default `5.f`
 inline void __DebugDrawPoint(const Vector2 &position, float radius = 5.f, Color color = RED)
 {
@@ -57,6 +43,44 @@ inline void __DebugDrawPoint(const Vector2 &position, float radius = 5.f, Color 
     point.color = color;
     point.radius = radius;
     g_DebugPoints.push(point);
+}
+
+/// @brief Draws `vector` at given `origin`; Call every frame
+/// @param color [OPTIONAL] Default `RED`
+/// @param scale [OPTIONAL] Default `1.f`
+inline void __DebugDrawVectorAt(const Vector2 &origin, const Vector2 &vector, float scale = 1.f, int thickness = 5, bool highlightPoints = true, Color color = RED)
+{
+    // using queue because we process then delete
+    __DebugLine line;
+    line.start = origin;
+    line.end = {origin.x + vector.x * scale, origin.y + vector.y * scale};
+    line.color = color;
+    line.thickness = thickness;
+    g_DebugLines.push(line);
+
+    if (highlightPoints)
+    {
+        __DebugDrawPoint(origin, thickness * 2.f, color);
+        __DebugDrawPoint(line.end, thickness * 2.f, color);
+    }
+}
+
+/// @brief Draws line from point `a` to `b`; Call every frame
+/// @param color [OPTIONAL] Default `RED`
+inline void __DebugDrawVectorAB(const Vector2 &a, const Vector2 &b, int thickness = 5, bool highlightPoints = true, Color color = RED)
+{
+    __DebugLine line;
+    line.start = a;
+    line.end = b;
+    line.color = color;
+    line.thickness = thickness;
+    g_DebugLines.push(line);
+
+    if (highlightPoints)
+    {
+        __DebugDrawPoint(a, thickness * 2.f, color);
+        __DebugDrawPoint(b, thickness * 2.f, color);
+    }
 }
 
 /// @brief Call every frame
