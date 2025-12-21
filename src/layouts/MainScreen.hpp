@@ -6,13 +6,14 @@
 #include "Car.hpp"
 #include "TrafficLight.hpp"
 
-constexpr int NUM_CARS_PER_DIRECTION = 5;
+// constexpr int NUM_CARS_PER_DIRECTION = 5;
 constexpr float START_OFFSET = -10.f;
 constexpr float SPACING = 50.f;
 
 struct GameState
 {
     TrafficLightGroup trafficLightGroup;
+    float carsPerSecond = 0.25f;
 
     std::vector<Car> cars;
     float deltaTime = 0.f;
