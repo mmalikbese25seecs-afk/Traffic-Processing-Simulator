@@ -46,8 +46,23 @@ void UpdateTrafficLights(GameState &state)
         for (auto &light : group.trafficLights)
         {
             int passedCount = static_cast<int>(light.carsPassed.size());
+            int waitingCount = static_cast<int>(light.carsWaiting.size());
 
-            __DebugDrawText(light.position, std::to_string(passedCount), 16, true, BLUE);
+            __DebugDrawText(
+                {
+                    light.position.x,
+                    light.position.y + 20 //
+                },
+                "P: " + std::to_string(passedCount), 16, true, GREEN //
+            );
+
+            __DebugDrawText(
+                {
+                    light.position.x,
+                    light.position.y + 40 //
+                },
+                "W: " + std::to_string(waitingCount), 16, true, ORANGE //
+            );
         }
     }
 }
@@ -159,7 +174,7 @@ void ForceUpdateTrafficLights(GameState &state)
 //      * WAIT (yellow) -> allow only if car is too close to stop
 //      * STOP          -> do not allow
 //  - Otherwise allow.
-bool CanCarPass(TrafficLightGroup &trafficLightGroup, const Car &car)
+bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
 {
     // get shortest distance from traffic light to car
     TrafficLight *closestLight = nullptr;
@@ -182,21 +197,28 @@ bool CanCarPass(TrafficLightGroup &trafficLightGroup, const Car &car)
     if (shortestDistance > TRAFFIC_LIGHT_CAR_DETECTION_RANGE)
         return true;
 
+    // check if car is moving towards the signal
+    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
+    if (!movingTowardsSignal)
+        return true;
+
     // check if car has passed the traffic light
     bool hasPassedTrafficLight = Vector2AfterPoint(car.position, closestLight->position, closestLight->direction);
-    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
-
-    if (hasPassedTrafficLight && movingTowardsSignal)
+    if (hasPassedTrafficLight) // is moving towards but already passed
     {
         // mark that car has passed this light
         closestLight->carsPassed.insert(car.id);
+        // remove from waiting set if was there
+        closestLight->carsWaiting.erase(car.id);
+        car.state = CarState::MOVING;
+        return true;
     }
-
-    if (hasPassedTrafficLight)
-        return true;
-    // check if car is moving towards signal
-    if (!movingTowardsSignal)
-        return true;
+    else // moving towards and not yet passed
+    {
+        // mark that car is waiting at this light
+        closestLight->carsWaiting.insert(car.id);
+        car.state = CarState::WAITING;
+    }
 
     // determine behavior based on light state
     if (closestLight->state == TrafficLightState::GO)

@@ -205,6 +205,16 @@ inline void __ProcessDebugDraws()
             drawPos.y -= textSize.y / 2.f;
         }
         DrawTextEx(GetFontDefault(), debugText.text.c_str(), drawPos, static_cast<float>(debugText.fontSize), 1.f, debugText.color);
+
+        // draw background box
+        DrawRectangle(
+            static_cast<int>(drawPos.x) - 2,
+            static_cast<int>(drawPos.y) - 2,
+            static_cast<int>(textSize.x) + 4,
+            static_cast<int>(textSize.y) + 4,
+            Fade(BLACK, 0.5f) //
+        );
+        
         g_DebugTexts.pop();
     }
 #endif

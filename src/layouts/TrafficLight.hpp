@@ -53,7 +53,10 @@ struct TrafficLight
     // position where cars should stop when orange light
     Vector2 waitingPosition;
     TrafficLightState state;
-    std::unordered_set<uint16_t> carsPassed; // IDs of cars that have passed this light
+    // IDs of cars that are waiting at this light
+    std::unordered_set<uint16_t> carsWaiting;
+    // IDs of cars that have passed this light
+    std::unordered_set<uint16_t> carsPassed;
 };
 
 struct TrafficLightGroup
@@ -74,4 +77,4 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light);
 
 void ForceUpdateTrafficLights(GameState &state);
 
-bool CanCarPass(TrafficLightGroup &group, const Car &car);
+bool TrafficLightUpdateCarState(TrafficLightGroup &group, Car &car);

@@ -13,7 +13,7 @@ void m_updateVelocity(Car &car, const GameState &state)
     car.position.y += car._velocity.y * state.deltaTime;
 }
 
-bool m_canCarMove(const Car &car, const GameState &state)
+bool m_checkCarCollision(Car &car, const GameState &state)
 {
     for (const auto &otherCar : state.cars)
     {
@@ -29,8 +29,14 @@ bool m_canCarMove(const Car &car, const GameState &state)
                 __DebugDrawVectorAB(car.position, otherCar.position, 2, true, MAGENTA);
             }
 
-            // other car is behind or to the side; ignore
-            return !Vector2AfterPoint(otherCar.position, car.position, car.desiredVelocity, CAR_DETECTION_ANGLE_DEG);
+            bool isCarInFront = Vector2AfterPoint(otherCar.position, car.position, car.desiredVelocity, CAR_DETECTION_ANGLE_DEG);
+
+            // other car is in front within detection angle
+            if (isCarInFront)
+            {
+                car.state = otherCar.state;
+                return false;
+            }
         }
     }
 
@@ -71,15 +77,19 @@ void m_DebugDrawCarArc(const Car &car)
 
 void UpdateCar(Car &car, GameState &state)
 {
-    if (!CanCarPass(state.trafficLightGroup, car) || !m_canCarMove(car, state))
-        StopCar(car);
+    if (!TrafficLightUpdateCarState(state.trafficLightGroup, car) || !m_checkCarCollision(car, state))
+    {
+        car._velocity = {0.f, 0.f};
+    }
     else
-        ResumeCar(car);
+    {
+        car._velocity = car.desiredVelocity;
+    }
 
     m_updateVelocity(car, state);
 
     // only update rotation if velocity is non-zero
-    const Vector2& vel = car._velocity;
+    const Vector2 &vel = car._velocity;
     if (!Vector2IsZero(vel))
     {
         car.rotation = AngleToDegrees(atan2f(vel.y, vel.x));
@@ -102,14 +112,11 @@ void DrawCar(const Car &car)
     DrawRectanglePro(carRect, origin, car.rotation, car.color);
 
     m_DebugDrawCarArc(car);
-}
 
-void StopCar(Car &car)
-{
-    car._velocity = {0.f, 0.f};
-}
-
-void ResumeCar(Car &car)
-{
-    car._velocity = car.desiredVelocity;
+    if (DEBUG_CAR_STATE)
+    {
+        // draw green point if moving, orange if waiting
+        Color stateColor = (car.state == CarState::MOVING) ? GREEN : ORANGE;
+        __DebugDrawPoint(car.position, 5.f, stateColor);
+    }
 }
