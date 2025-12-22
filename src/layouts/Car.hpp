@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <cstdint>
 
 struct GameState;
 
@@ -15,6 +16,7 @@ constexpr float CAR_DETECTION_ANGLE_DEG = 45.f;
 
 struct Car
 {
+    uint16_t id;
     Vector2 position;
     Vector2 size;
     Vector2 desiredVelocity; // where the car wants to go
@@ -24,13 +26,8 @@ struct Car
     Vector2 _velocity; // current velocity
 };
 
-void UpdateCar(Car &car, const GameState &state);
+void UpdateCar(Car &car, GameState &state);
 void DrawCar(const Car &car);
-
-const Vector2 &NewFunction(const Car &car);
-
-void SetCarVelocity(Car &car, Vector2 newVelocity);
-Vector2 GetCarVelocity(const Car &car);
 
 void StopCar(Car &car);
 void ResumeCar(Car &car);

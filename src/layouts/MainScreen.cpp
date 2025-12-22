@@ -31,11 +31,14 @@ void m_spawnCars(GameState &state)
             return;
 
         Car newCar = {
+            .id = state._lastAddedCarId,
             .position = position,
             .size = size,
             .desiredVelocity = velocity //
         };
         state.cars.push_back(newCar);
+
+        state._lastAddedCarId++;
     };
     // bottom to top
     addCarLambda(

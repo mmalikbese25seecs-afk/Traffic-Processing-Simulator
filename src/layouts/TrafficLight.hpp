@@ -1,14 +1,18 @@
 // TrafficLight.hpp (updated)
 #pragma once
 
-#include <array>
 #include <raylib.h>
+
+#include <array>
+#include <cstdint>
+#include <unordered_set>
 
 struct Car;
 struct GameState;
 
 // debug: allow cars to ignore lights for visual/testing
 constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS = true;
+constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_PASSED = true;
 
 // traffic light graphics constants
 constexpr float TRAFFIC_LIGHT_RADIUS = 10.f;
@@ -49,6 +53,7 @@ struct TrafficLight
     // position where cars should stop when orange light
     Vector2 waitingPosition;
     TrafficLightState state;
+    std::unordered_set<uint16_t> carsPassed; // IDs of cars that have passed this light
 };
 
 struct TrafficLightGroup
@@ -69,4 +74,4 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light);
 
 void ForceUpdateTrafficLights(GameState &state);
 
-bool CanCarPass(const TrafficLightGroup &group, const Car &car);
+bool CanCarPass(TrafficLightGroup &group, const Car &car);

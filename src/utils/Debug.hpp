@@ -31,9 +31,19 @@ struct __DebugCircleArc
     Color color;
 };
 
+struct __DebugText
+{
+    Vector2 position;
+    std::string text;
+    int fontSize = 20;
+    bool centered = false;
+    Color color;
+};
+
 inline std::queue<__DebugLine> g_DebugLines;
 inline std::queue<__DebugPoint> g_DebugPoints;
 inline std::queue<__DebugCircleArc> g_DebugCircleArcs;
+inline std::queue<__DebugText> g_DebugTexts;
 
 /// @brief Call every frame
 /// @param color [OPTIONAL] Default `RED`
@@ -143,6 +153,21 @@ inline void __DebugDrawCircleArc(
     }
 #endif
 }
+/// @brief Call every frame
+/// @param color [OPTIONAL] Default `RED`
+/// @param fontSize [OPTIONAL] Default `20`
+inline void __DebugDrawText(const Vector2 &position, const std::string &text, int fontSize = 20, bool centered = false, Color color = MAGENTA)
+{
+#if DEBUG_DRAW_ENABLED
+    __DebugText debugText;
+    debugText.position = position;
+    debugText.text = text;
+    debugText.fontSize = fontSize;
+    debugText.color = color;
+    debugText.centered = centered;
+    g_DebugTexts.push(debugText);
+#endif
+}
 
 inline void __ProcessDebugDraws()
 {
@@ -169,5 +194,18 @@ inline void __ProcessDebugDraws()
         g_DebugPoints.pop();
     }
 
+    while (!g_DebugTexts.empty())
+    {
+        __DebugText debugText = g_DebugTexts.front();
+        Vector2 textSize = MeasureTextEx(GetFontDefault(), debugText.text.c_str(), static_cast<float>(debugText.fontSize), 1.f);
+        Vector2 drawPos = debugText.position;
+        if (debugText.centered)
+        {
+            drawPos.x -= textSize.x / 2.f;
+            drawPos.y -= textSize.y / 2.f;
+        }
+        DrawTextEx(GetFontDefault(), debugText.text.c_str(), drawPos, static_cast<float>(debugText.fontSize), 1.f, debugText.color);
+        g_DebugTexts.pop();
+    }
 #endif
 }

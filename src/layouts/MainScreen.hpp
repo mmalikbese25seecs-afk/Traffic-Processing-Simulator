@@ -17,6 +17,7 @@ struct GameState
 {
     TrafficLightGroup trafficLightGroup;
     float carsPerSecond = 0.5f;
+    uint16_t _lastAddedCarId = 0;
 
     std::vector<Car> cars;
     float deltaTime = 0.f;

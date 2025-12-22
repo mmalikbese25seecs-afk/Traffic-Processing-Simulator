@@ -39,6 +39,17 @@ void UpdateTrafficLights(GameState &state)
         // advance to the next phase
         SwitchTrafficLights(group);
     }
+
+    // for each traffic light show car passed
+    if (DEBUG_TRAFFIC_LIGHT_CAR_PASSED)
+    {
+        for (auto &light : group.trafficLights)
+        {
+            int passedCount = static_cast<int>(light.carsPassed.size());
+
+            __DebugDrawText(light.position, std::to_string(passedCount), 16, true, BLUE);
+        }
+    }
 }
 
 // Advances the traffic light group's phase machine:
@@ -148,13 +159,13 @@ void ForceUpdateTrafficLights(GameState &state)
 //      * WAIT (yellow) -> allow only if car is too close to stop
 //      * STOP          -> do not allow
 //  - Otherwise allow.
-bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
+bool CanCarPass(TrafficLightGroup &trafficLightGroup, const Car &car)
 {
     // get shortest distance from traffic light to car
-    const TrafficLight *closestLight = nullptr;
+    TrafficLight *closestLight = nullptr;
     float shortestDistance = std::numeric_limits<float>::max();
 
-    for (const TrafficLight &light : trafficLightGroup.trafficLights)
+    for (TrafficLight &light : trafficLightGroup.trafficLights)
     {
         float distance = Vector2Distance(light.position, car.position);
         if (distance < shortestDistance)
@@ -173,11 +184,17 @@ bool CanCarPass(const TrafficLightGroup &trafficLightGroup, const Car &car)
 
     // check if car has passed the traffic light
     bool hasPassedTrafficLight = Vector2AfterPoint(car.position, closestLight->position, closestLight->direction);
+    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
+
+    if (hasPassedTrafficLight && movingTowardsSignal)
+    {
+        // mark that car has passed this light
+        closestLight->carsPassed.insert(car.id);
+    }
+
     if (hasPassedTrafficLight)
         return true;
-
     // check if car is moving towards signal
-    bool movingTowardsSignal = Vector2Aligned(car.desiredVelocity, closestLight->direction);
     if (!movingTowardsSignal)
         return true;
 

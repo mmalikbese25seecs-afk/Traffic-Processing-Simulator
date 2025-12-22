@@ -18,7 +18,7 @@ bool m_canCarMove(const Car &car, const GameState &state)
     for (const auto &otherCar : state.cars)
     {
         // skip self
-        if (&otherCar == &car)
+        if (otherCar.id == car.id)
             continue;
 
         float distance = Vector2Distance(car.position, otherCar.position);
@@ -69,7 +69,7 @@ void m_DebugDrawCarArc(const Car &car)
     }
 }
 
-void UpdateCar(Car &car, const GameState &state)
+void UpdateCar(Car &car, GameState &state)
 {
     if (!CanCarPass(state.trafficLightGroup, car) || !m_canCarMove(car, state))
         StopCar(car);
@@ -79,7 +79,7 @@ void UpdateCar(Car &car, const GameState &state)
     m_updateVelocity(car, state);
 
     // only update rotation if velocity is non-zero
-    Vector2 vel = GetCarVelocity(car);
+    const Vector2& vel = car._velocity;
     if (!Vector2IsZero(vel))
     {
         car.rotation = AngleToDegrees(atan2f(vel.y, vel.x));
@@ -102,16 +102,6 @@ void DrawCar(const Car &car)
     DrawRectanglePro(carRect, origin, car.rotation, car.color);
 
     m_DebugDrawCarArc(car);
-}
-
-void SetCarVelocity(Car &car, Vector2 newVelocity)
-{
-    car.desiredVelocity = newVelocity;
-}
-
-Vector2 GetCarVelocity(const Car &car)
-{
-    return car.desiredVelocity;
 }
 
 void StopCar(Car &car)
