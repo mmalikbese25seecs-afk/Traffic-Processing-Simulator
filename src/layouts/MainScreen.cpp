@@ -27,7 +27,7 @@ void m_spawnCars(GameState &state)
     auto addCarLambda = [&](const Vector2 &position, const Vector2 &velocity, const Vector2 &size)
     {
         // skip based on random chance
-        if (!GetRandomChance(MAIN_SCREEN_CAR_SKIP_SPAWN_CHANCE))
+        if (!GetRandomChance(MAIN_SCREEN_CAR_SPAWN_CHANCE))
             return;
 
         Car newCar = {

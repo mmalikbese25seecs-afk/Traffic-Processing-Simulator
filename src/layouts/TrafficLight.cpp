@@ -129,14 +129,14 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
 
     // compute waiting counts and find the heaviest queue
     size_t maxWaiting = 0;
-    int maxIdx = -1;
-    for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+    TrafficLight *biggestQueueLight = nullptr;
+    for (TrafficLight &light : group.trafficLights)
     {
-        size_t wc = group.trafficLights[i].carsWaiting.size();
-        if (wc > maxWaiting)
+        size_t waiting = light.carsWaiting.size();
+        if (waiting > maxWaiting)
         {
-            maxWaiting = wc;
-            maxIdx = i;
+            maxWaiting = waiting;
+            biggestQueueLight = &light;
         }
     }
 
@@ -161,60 +161,55 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
             light.state = TrafficLightState::STOP;
         }
     }
-
     // If a light is currently green, let it complete at least the minimum green time before switching away.
-    int currentGreenIdx = -1;
-    for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+    for (auto &light : group.trafficLights)
     {
-        if (group.trafficLights[i].state == TrafficLightState::GO)
+        if (light.state == TrafficLightState::GO)
         {
-            currentGreenIdx = i;
-            break;
+            double greenAge = now - light.lastGreenTime;
+            if (greenAge < TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME)
+            {
+                return; // do not switch yet
+            }
         }
-    }
-    if (currentGreenIdx != -1)
-    {
-        double greenAge = now - group.trafficLights[currentGreenIdx].lastGreenTime;
-        if (greenAge < static_cast<double>(TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME))
-            return; // hold current green
     }
 
     // Priority rule: if the busiest queue has >= 3 cars and that light hasn't been green for >= 10s, make it green
-    if (maxIdx != -1)
+    if (!biggestQueueLight)
+        return;
+
+    double sinceGreen = now - biggestQueueLight->lastGreenTime;
+    if (biggestQueueLight->carsWaiting.size() >= 3 && sinceGreen >= 10.0)
     {
-        TrafficLight &candidate = group.trafficLights[maxIdx];
-        double sinceGreen = now - candidate.lastGreenTime;
-        if (candidate.carsWaiting.size() >= 3 && sinceGreen >= 10.0)
+        // switch biggest to GO and others to STOP
+        biggestQueueLight->state = TrafficLightState::GO;
+        biggestQueueLight->lastGreenTime = now;
+        for (auto &light : group.trafficLights)
         {
-            // switch candidate to GO and others to STOP
-            for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+            if (&light != biggestQueueLight)
             {
-                if (i == maxIdx)
-                {
-                    if (group.trafficLights[i].state != TrafficLightState::GO)
-                    {
-                        group.trafficLights[i].state = TrafficLightState::GO;
-                        group.trafficLights[i].lastGreenTime = now;
-                    }
-                }
-                else
-                {
-                    group.trafficLights[i].state = TrafficLightState::STOP;
-                }
+                light.state = TrafficLightState::STOP;
             }
-            return;
         }
+        return;
     }
 
     // Fallback behavior:
-    // If there's no current green, promote the busiest queue to green (so traffic flows).
-    if (currentGreenIdx == -1 && maxIdx != -1)
+    // If there's no green, make the busiest queue to green
+    bool anyGreen = false;
+    for (const auto &light : group.trafficLights)
     {
-        group.trafficLights[maxIdx].state = TrafficLightState::GO;
-        group.trafficLights[maxIdx].lastGreenTime = now;
+        if (light.state == TrafficLightState::GO)
+        {
+            anyGreen = true;
+            break;
+        }
     }
-
-    // Also ensure that any light with zero waiting cars does not remain green indefinitely.
+    if (!anyGreen && biggestQueueLight)
+    {
+        biggestQueueLight->state = TrafficLightState::GO;
+        biggestQueueLight->lastGreenTime = now;
+    }
 }
 
 void DrawTrafficLightGroup(const TrafficLightGroup &light)
