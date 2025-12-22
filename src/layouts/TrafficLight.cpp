@@ -11,50 +11,32 @@
 
 void UpdateTrafficLights(GameState &state)
 {
-    double timeNow = GetTime();
     TrafficLightGroup &group = state.trafficLightGroup;
 
-    // initialize phaseStartTime if zero
-    if (group.phaseStartTime <= 0.0)
-        group.phaseStartTime = timeNow;
-
-    double elapsed = timeNow - group.phaseStartTime;
-    float phaseDuration = 0.f;
-
-    switch (group.phase)
+    // choose switching method
+    if (TRAFFIC_LIGHT_ADAPTIVE_ENABLED)
     {
-    case TrafficLightGroupPhase::GREEN_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_GREEN_DURATION;
-        break;
-    case TrafficLightGroupPhase::YELLOW_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_YELLOW_DURATION;
-        break;
-    case TrafficLightGroupPhase::ALL_RED_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_ALL_RED_DURATION;
-        break;
+        SwitchTrafficLightsAdaptive(group); // placeholder
+    }
+    else
+    {
+        SwitchTrafficLightsTimed(group); // timed handles phase duration internally
     }
 
-    if (elapsed >= phaseDuration)
-    {
-        // advance to the next phase
-        SwitchTrafficLights(group);
-    }
-
-    // if a car is waiting and car next to it is also waiting, add it to carsWaiting
+    // update carsWaiting sets for debugging
     for (auto &light : group.trafficLights)
     {
         for (const Car &car : state.cars)
         {
             if (car.state == CarState::WAITING)
             {
-                // if car is aligned with traffic light direction; going in that direction
                 if (Vector2Aligned(car.desiredVelocity, light.direction))
                     light.carsWaiting.insert(car.id);
             }
         }
     }
 
-    // for each traffic light show car passed
+    // debug display of cars passed / waiting
     if (DEBUG_TRAFFIC_LIGHT_CAR_PASSED)
     {
         for (auto &light : group.trafficLights)
@@ -62,21 +44,8 @@ void UpdateTrafficLights(GameState &state)
             int passedCount = static_cast<int>(light.carsPassed.size());
             int waitingCount = static_cast<int>(light.carsWaiting.size());
 
-            __DebugDrawText(
-                {
-                    light.position.x,
-                    light.position.y + 20 //
-                },
-                "P: " + std::to_string(passedCount), 16, true, GREEN //
-            );
-
-            __DebugDrawText(
-                {
-                    light.position.x,
-                    light.position.y + 40 //
-                },
-                "W: " + std::to_string(waitingCount), 16, true, ORANGE //
-            );
+            __DebugDrawText({light.position.x, light.position.y + 20}, "P: " + std::to_string(passedCount), 16, true, GREEN);
+            __DebugDrawText({light.position.x, light.position.y + 40}, "W: " + std::to_string(waitingCount), 16, true, ORANGE);
         }
     }
 }
@@ -85,50 +54,167 @@ void UpdateTrafficLights(GameState &state)
 // GREEN_PHASE -> YELLOW_PHASE (current group's lights become WAIT)
 // YELLOW_PHASE -> ALL_RED_PHASE (both groups STOP)
 // ALL_RED_PHASE -> GREEN_PHASE (toggle currentGroup; that group's lights become GO)
-void SwitchTrafficLights(TrafficLightGroup &group)
+void SwitchTrafficLightsTimed(TrafficLightGroup &group)
 {
     double now = GetTime();
 
+    // compute elapsed time since phase started
+    double elapsed = now - group.phaseStartTime;
+    float phaseDuration = 0.f;
+
     switch (group.phase)
     {
-    case TrafficLightGroupPhase::GREEN_PHASE:
+    case TrafficLightTimedGroupPhase::GREEN_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_GREEN_DURATION;
+        break;
+    case TrafficLightTimedGroupPhase::YELLOW_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_YELLOW_DURATION;
+        break;
+    case TrafficLightTimedGroupPhase::ALL_RED_PHASE:
+        phaseDuration = TRAFFIC_LIGHT_ALL_RED_DURATION;
+        break;
+    }
+
+    // only switch phase if duration has passed
+    if (elapsed < phaseDuration)
+        return;
+
+    // advance phase
+    switch (group.phase)
     {
-        // Start yellow for the currently green pair
+    case TrafficLightTimedGroupPhase::GREEN_PHASE:
+    {
         for (size_t i = 0; i < group.trafficLights.size(); ++i)
         {
             bool isCurrentPair = (group.currentGroup && (i == 0 || i == 2)) || (!group.currentGroup && (i == 1 || i == 3));
-            if (isCurrentPair)
-                group.trafficLights[i].state = TrafficLightState::WAIT;
-            else
-                group.trafficLights[i].state = TrafficLightState::STOP;
+            group.trafficLights[i].state = isCurrentPair ? TrafficLightState::WAIT : TrafficLightState::STOP;
         }
-        group.phase = TrafficLightGroupPhase::YELLOW_PHASE;
-        group.phaseStartTime = now;
+        group.phase = TrafficLightTimedGroupPhase::YELLOW_PHASE;
         break;
     }
-    case TrafficLightGroupPhase::YELLOW_PHASE:
+    case TrafficLightTimedGroupPhase::YELLOW_PHASE:
     {
-        // All-red: everyone STOP for a short safety interval
         for (auto &light : group.trafficLights)
             light.state = TrafficLightState::STOP;
-        group.phase = TrafficLightGroupPhase::ALL_RED_PHASE;
-        group.phaseStartTime = now;
+        group.phase = TrafficLightTimedGroupPhase::ALL_RED_PHASE;
         break;
     }
-    case TrafficLightGroupPhase::ALL_RED_PHASE:
+    case TrafficLightTimedGroupPhase::ALL_RED_PHASE:
     {
-        // End of cycle: toggle which pair is green and give them GO
         group.currentGroup = !group.currentGroup;
         for (size_t i = 0; i < group.trafficLights.size(); ++i)
         {
             bool isCurrentPair = (group.currentGroup && (i == 0 || i == 2)) || (!group.currentGroup && (i == 1 || i == 3));
             group.trafficLights[i].state = isCurrentPair ? TrafficLightState::GO : TrafficLightState::STOP;
         }
-        group.phase = TrafficLightGroupPhase::GREEN_PHASE;
-        group.phaseStartTime = now;
+        group.phase = TrafficLightTimedGroupPhase::GREEN_PHASE;
         break;
     }
     }
+
+    // mark new phase start
+    group.phaseStartTime = now;
+}
+
+void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
+{
+    const double now = GetTime();
+    const double interval = 1.0 / TRAFFIC_LIGHT_ADAPTIVE_TICK_RATE;
+
+    static int lastTick = -1;
+    const int currentTick = static_cast<int>(now / interval);
+    if (currentTick == lastTick)
+        return;
+    lastTick = currentTick;
+
+    // compute waiting counts and find the heaviest queue
+    size_t maxWaiting = 0;
+    int maxIdx = -1;
+    for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+    {
+        size_t wc = group.trafficLights[i].carsWaiting.size();
+        if (wc > maxWaiting)
+        {
+            maxWaiting = wc;
+            maxIdx = i;
+        }
+    }
+
+    // if nobody waiting return
+    if (maxWaiting == 0)
+        return;
+
+    // first, turn off any green lights with zero waiting cars
+    for (auto &light : group.trafficLights)
+    {
+        if (light.carsWaiting.empty() && light.state == TrafficLightState::GO)
+        {
+            light.state = TrafficLightState::STOP;
+        }
+    }
+    // next, turn off any green lights that have exceeded minimum green time
+    for (auto &light : group.trafficLights)
+    {
+        double greenAge = now - light.lastGreenTime;
+        if (light.state == TrafficLightState::GO && greenAge >= TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME)
+        {
+            light.state = TrafficLightState::STOP;
+        }
+    }
+
+    // If a light is currently green, let it complete at least the minimum green time before switching away.
+    int currentGreenIdx = -1;
+    for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+    {
+        if (group.trafficLights[i].state == TrafficLightState::GO)
+        {
+            currentGreenIdx = i;
+            break;
+        }
+    }
+    if (currentGreenIdx != -1)
+    {
+        double greenAge = now - group.trafficLights[currentGreenIdx].lastGreenTime;
+        if (greenAge < static_cast<double>(TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME))
+            return; // hold current green
+    }
+
+    // Priority rule: if the busiest queue has >= 3 cars and that light hasn't been green for >= 10s, make it green
+    if (maxIdx != -1)
+    {
+        TrafficLight &candidate = group.trafficLights[maxIdx];
+        double sinceGreen = now - candidate.lastGreenTime;
+        if (candidate.carsWaiting.size() >= 3 && sinceGreen >= 10.0)
+        {
+            // switch candidate to GO and others to STOP
+            for (int i = 0; i < static_cast<int>(group.trafficLights.size()); ++i)
+            {
+                if (i == maxIdx)
+                {
+                    if (group.trafficLights[i].state != TrafficLightState::GO)
+                    {
+                        group.trafficLights[i].state = TrafficLightState::GO;
+                        group.trafficLights[i].lastGreenTime = now;
+                    }
+                }
+                else
+                {
+                    group.trafficLights[i].state = TrafficLightState::STOP;
+                }
+            }
+            return;
+        }
+    }
+
+    // Fallback behavior:
+    // If there's no current green, promote the busiest queue to green (so traffic flows).
+    if (currentGreenIdx == -1 && maxIdx != -1)
+    {
+        group.trafficLights[maxIdx].state = TrafficLightState::GO;
+        group.trafficLights[maxIdx].lastGreenTime = now;
+    }
+
+    // Also ensure that any light with zero waiting cars does not remain green indefinitely.
 }
 
 void DrawTrafficLightGroup(const TrafficLightGroup &light)
@@ -177,7 +263,7 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
 
 void ForceUpdateTrafficLights(GameState &state)
 {
-    SwitchTrafficLights(state.trafficLightGroup);
+    SwitchTrafficLightsTimed(state.trafficLightGroup);
 }
 
 // Behavior:
