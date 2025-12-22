@@ -40,6 +40,20 @@ void UpdateTrafficLights(GameState &state)
         SwitchTrafficLights(group);
     }
 
+    // if a car is waiting and car next to it is also waiting, add it to carsWaiting
+    for (auto &light : group.trafficLights)
+    {
+        for (const Car &car : state.cars)
+        {
+            if (car.state == CarState::WAITING)
+            {
+                // if car is aligned with traffic light direction; going in that direction
+                if (Vector2Aligned(car.desiredVelocity, light.direction))
+                    light.carsWaiting.insert(car.id);
+            }
+        }
+    }
+
     // for each traffic light show car passed
     if (DEBUG_TRAFFIC_LIGHT_CAR_PASSED)
     {
@@ -213,7 +227,8 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
         car.state = CarState::MOVING;
         return true;
     }
-    else // moving towards and not yet passed
+    // moving towards and not yet passed; and light is red
+    else if (!hasPassedTrafficLight && closestLight->state == TrafficLightState::STOP)
     {
         // mark that car is waiting at this light
         closestLight->carsWaiting.insert(car.id);
