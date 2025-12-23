@@ -86,7 +86,7 @@ void DrawConfigUI(Node &root, ConfigUIState &state, float contentTop, float view
             else
                 displayText = ValueToString(*f.config);
 
-            displayText = f.config->label + " = " + displayText;
+            displayText = f.node->title + " = " + displayText;
             DrawText(displayText.c_str(), (int)r.x + 6, (int)r.y + 6, 14, BLACK);
 
             if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))

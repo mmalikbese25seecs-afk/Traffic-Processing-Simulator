@@ -1,34 +1,39 @@
 #include "config.hpp"
-
 #include "ConfigTree.hpp"
 
 Node BuildConfigTree()
 {
     Node root;
-    root.title = "CONFIG,";
+    root.title = "CONFIG";
 
+    // Main Configuration
     Node main_config;
     main_config.title = "Main Configuration";
 
+    // Car Config
     Node car;
     car.title = "Car";
 
-    Node detection;
-    detection.title = "Detection";
-    detection.children.push_back(
-        Node{"Radius", ConfigValue{"radius", ValueType::Int, 50, 0, 200}, {}, false});
-    detection.children.push_back(
-        Node{"Angle(deg)", ConfigValue{"angle_deg", ValueType::Int, 45, 0, 180}, {}, false});
-    car.children.push_back(detection);
-
-    Node spawn;
-    spawn.title = "Car Spawning";
-    spawn.children.push_back(
+    car.children.push_back(
         Node{"Spawn Chance",
              ConfigValue{"main_screen_spawn_chance", ValueType::Float, 1.0f, 0.0f, 1.0f},
              {},
              false});
 
+    Node carCollision;
+    carCollision.title = "Collision";
+
+    carCollision.children.push_back(
+        Node{"Radius", ConfigValue{"radius", ValueType::Int, 50, 0, 200}, {}, false});
+    carCollision.children.push_back(
+        Node{"Angle(deg)", ConfigValue{"angle_deg", ValueType::Int, 45, 0, 180}, {}, false});
+    carCollision.children.push_back(
+        Node{"Detection Range", ConfigValue{"detection_range", ValueType::Int, 100, 0, 500}, {}, false});
+
+    car.children.push_back(carCollision);
+    main_config.children.push_back(car);
+
+    // Traffic Light Config
     Node tl;
     tl.title = "Traffic Light";
 
@@ -63,6 +68,9 @@ Node BuildConfigTree()
         Node{"Max Green Time", ConfigValue{"tl_adaptive_max_green_time", ValueType::Int, 20, 5, 60}, {}, false});
     tl.children.push_back(tl_adaptive);
 
+    main_config.children.push_back(tl);
+
+    // Debug Options
     Node debug_options;
     debug_options.title = "Debug Options";
 
@@ -87,10 +95,6 @@ Node BuildConfigTree()
     debug_tl.children.push_back(
         Node{"Traffic Light Wait Positions", ConfigValue{"main_screen_debug_draw_traffic_light_positions", ValueType::Bool, true}, {}, false});
     debug_options.children.push_back(debug_tl);
-
-    main_config.children.push_back(car);
-    main_config.children.push_back(spawn);
-    main_config.children.push_back(tl);
 
     root.children.push_back(main_config);
     root.children.push_back(debug_options);
