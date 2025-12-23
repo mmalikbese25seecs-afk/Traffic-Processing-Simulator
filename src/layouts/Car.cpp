@@ -16,10 +16,10 @@ void m_updateVelocity(Car &car, const GameState &state)
 
 bool m_checkCarCollision(Car &car, GameState &state)
 {
-    int detectionRadius = GetConfigInt(state.rootConfigNode, "radius", 50);
-    int detectionAngle = GetConfigInt(state.rootConfigNode, "angle_deg", 45);
+    int detectionRadius = GetConfigInt(state.rootConfigNode, "car_collision_radius", 50);
+    int detectionAngle = GetConfigInt(state.rootConfigNode, "car_collision_angle_deg", 45);
 
-    bool debugOtherCars = GetConfigBool(state.rootConfigNode, "debug_car_detection_other_cars", false);
+    bool debugOtherCars = GetConfigBool(state.rootConfigNode, "debug_car_show_other_car_detection", false);
 
     for (const auto &otherCar : state.cars)
     {
@@ -52,7 +52,7 @@ bool m_checkCarCollision(Car &car, GameState &state)
 
 void m_DebugDrawCarArc(const Car &car, const Node &rootConfigNode)
 {
-    bool debugArc = GetConfigBool(rootConfigNode, "debug_car_detection_arc", false);
+    bool debugArc = GetConfigBool(rootConfigNode, "debug_car_show_collision_arc", false);
     if (!debugArc)
         return;
 
@@ -66,8 +66,8 @@ void m_DebugDrawCarArc(const Car &car, const Node &rootConfigNode)
     // compute forward angle in degrees (raylib space)
     float forwardAngleDeg = atan2f(forward.y, forward.x) * RAD2DEG;
 
-    int detectionAngle = GetConfigInt(rootConfigNode, "angle_deg", 45);
-    int detectionRadius = GetConfigInt(rootConfigNode, "radius", 50);
+    int detectionAngle = GetConfigInt(rootConfigNode, "car_collision_angle_deg", 45);
+    int detectionRadius = GetConfigInt(rootConfigNode, "car_collision_radius", 50);
 
     float startAngle = forwardAngleDeg - detectionAngle;
     float endAngle = forwardAngleDeg + detectionAngle;
@@ -123,7 +123,7 @@ void DrawCar(const Car &car, const GameState& state)
     };
     DrawRectanglePro(carRect, origin, car.rotation, car.color);
 
-    if (GetConfigBool(state.rootConfigNode, "debug_car_state", true))
+    if (GetConfigBool(state.rootConfigNode, "debug_car_show_state", true))
     {
         // draw green point if moving, orange if waiting
         Color stateColor = (car.state == CarState::MOVING) ? GREEN : ORANGE;

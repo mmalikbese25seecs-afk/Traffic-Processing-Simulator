@@ -15,7 +15,7 @@ void UpdateTrafficLights(GameState &state)
     TrafficLightGroup &group = state.trafficLightGroup;
 
     // choose switching method
-    if (GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false))
+    if (GetConfigBool(state.rootConfigNode, "traffic_light_adaptive_enabled", false))
     {
         SwitchTrafficLightsAdaptive(group, state.rootConfigNode);
     }
@@ -38,7 +38,7 @@ void UpdateTrafficLights(GameState &state)
     }
 
     // debug display of cars passed / waiting
-    if (GetConfigBool(state.rootConfigNode, "debug_tl_car_passed", false))
+    if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_stats", false))
     {
         for (auto &light : group.trafficLights)
         {
@@ -66,13 +66,13 @@ void SwitchTrafficLightsTimed(TrafficLightGroup &group, const Node &configNode)
     switch (group.phase)
     {
     case TrafficLightTimedGroupPhase::GREEN_PHASE:
-        phaseDuration = GetConfigInt(configNode, "green_duration", 10);
+        phaseDuration = GetConfigInt(configNode, "traffic_light_green_duration", 10);
         break;
     case TrafficLightTimedGroupPhase::YELLOW_PHASE:
-        phaseDuration = GetConfigInt(configNode, "yellow_duration", 3);
+        phaseDuration = GetConfigInt(configNode, "traffic_light_yellow_duration", 3);
         break;
     case TrafficLightTimedGroupPhase::ALL_RED_PHASE:
-        phaseDuration = GetConfigFloat(configNode, "all_red_duration", 0.5f);
+        phaseDuration = GetConfigFloat(configNode, "traffic_light_all_red_duration", 0.5f);
         break;
     }
 
@@ -120,7 +120,7 @@ void SwitchTrafficLightsTimed(TrafficLightGroup &group, const Node &configNode)
 void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNode)
 {
     const double now = GetTime();
-    const int tickRate = GetConfigInt(configNode, "tl_adaptive_tick_rate", 1);
+    const int tickRate = GetConfigInt(configNode, "traffic_light_adaptive_refresh_interval", 1);
     const double interval = 1.0 / tickRate;
 
     static int lastTick = -1;
@@ -129,7 +129,7 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNod
         return;
     lastTick = currentTick;
 
-    const int minGreenTime = GetConfigInt(configNode, "tl_adaptive_min_green_time", 5);
+    const int minGreenTime = GetConfigInt(configNode, "traffic_light_adaptive_min_green_time", 5);
 
     // if any light is green and below min green time, do nothing
     for (const auto &light : group.trafficLights)
@@ -234,7 +234,7 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
 
 void ForceUpdateTrafficLights(GameState &state)
 {
-    if (GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false))
+    if (GetConfigBool(state.rootConfigNode, "traffic_light_adaptive_enabled", false))
     {
         SwitchTrafficLightsAdaptive(state.trafficLightGroup, state.rootConfigNode);
     }
@@ -272,7 +272,7 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
         return true;
 
     // far away from traffic light -> ignore it until close enough
-    if (shortestDistance > GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50))
+    if (shortestDistance > GetConfigInt(state.rootConfigNode, "traffic_light_car_detection_range", 50))
         return true;
 
     // check if car is moving towards the signal
@@ -302,10 +302,10 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
     // determine behavior based on light state
     if (closestLight->state == TrafficLightState::GO)
     {
-        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_detection_range", false))
         {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, GREEN);
-            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            float range = GetConfigInt(state.rootConfigNode, "traffic_light_car_detection_range", 50);
             __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(GREEN, 0.1f));
         }
         return true;
@@ -316,10 +316,10 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
         bool carBeforeWaitingPos = Vector2AfterPoint(closestLight->waitingPosition, car.position, closestLight->direction);
         if (carBeforeWaitingPos)
         {
-            if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+            if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_detection_range", false))
             {
                 __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
-                float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+                float range = GetConfigInt(state.rootConfigNode, "traffic_light_car_detection_range", 50);
                 __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(RED, 0.1f));
             }
 
@@ -327,10 +327,10 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
         }
 
         // else stop
-        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_detection_range", false))
         {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, Fade(RED, 0.5f));
-            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            float range = GetConfigInt(state.rootConfigNode, "traffic_light_car_detection_range", 50);
             __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(RED, 0.1f));
         }
 
@@ -347,10 +347,10 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
 
         bool tooCloseToStop = shortestDistance <= minDistanceToStop;
 
-        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_detection_range", false))
         {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, ORANGE);
-            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            float range = GetConfigInt(state.rootConfigNode, "traffic_light_car_detection_range", 50);
             __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(ORANGE, 0.1f));
         }
 

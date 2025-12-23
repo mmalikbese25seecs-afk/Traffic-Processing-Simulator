@@ -32,12 +32,12 @@ int main()
     }
 
     // print config "debug_mode"
-    if (auto cfg = TryReadConfig(gameState.rootConfigNode, "debug_car_detection_other_cars"))
+    if (auto cfg = TryReadConfig(gameState.rootConfigNode, "debug_car_show_other_car_detection"))
     {
         if (auto b = std::get_if<bool>(&cfg->value))
             std::cout << "Config 'debug_car_detection_other_cars' = " << (*b ? "true" : "false") << "\n";
     }
-    GetConfigBool(gameState.rootConfigNode, "debug_car_detection_other_cars", false);
+    GetConfigBool(gameState.rootConfigNode, "debug_car_show_other_car_detection", false);
 
     ConfigUIState configUI;
     bool showConfig = false;
@@ -124,7 +124,7 @@ void DrawInstructions(const GameState &state)
     const int lineHeight = 22;
     int y = 10;
 
-    std::string currentMode = GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false) ? "Adaptive Mode" : "Timed Mode";
+    std::string currentMode = GetConfigBool(state.rootConfigNode, "traffic_light_adaptive_enabled", false) ? "Adaptive Mode" : "Timed Mode";
     DrawText(("Current Mode: " + std::string(currentMode)).c_str(), 10, y, fontSize, RAYWHITE);
     y += lineHeight;
 

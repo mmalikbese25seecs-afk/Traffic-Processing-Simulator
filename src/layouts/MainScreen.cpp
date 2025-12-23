@@ -27,7 +27,7 @@ void m_spawnCars(GameState &state)
     auto addCarLambda = [&](const Vector2 &position, const Vector2 &velocity, const Vector2 &size)
     {
         // skip based on random chance
-        if (!GetRandomChance(GetConfigFloat(state.rootConfigNode, "main_screen_spawn_chance", 1.0f)))
+        if (!GetRandomChance(GetConfigFloat(state.rootConfigNode, "car_spawn_chance", 1.0f)))
             return;
 
         Car newCar = {
@@ -194,7 +194,7 @@ void ResumeGameState(GameState &state)
 
 void m_debugDrawGameState(const GameState &state)
 {
-    if (GetConfigBool(state.rootConfigNode, "main_screen_debug_draw_traffic_light_positions", false))
+    if (GetConfigBool(state.rootConfigNode, "debug_traffic_light_show_wait_positions", false))
     {
         for (const auto &light : state.trafficLightGroup.trafficLights)
         {
