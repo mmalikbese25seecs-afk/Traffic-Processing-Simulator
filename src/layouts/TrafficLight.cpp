@@ -120,7 +120,8 @@ void SwitchTrafficLightsTimed(TrafficLightGroup &group, const Node &configNode)
 void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNode)
 {
     const double now = GetTime();
-    const double interval = 1.0 / GetConfigInt(configNode, "tl_adaptive_tick_rate", 1);
+    const int tickRate = GetConfigInt(configNode, "tl_adaptive_tick_rate", 1);
+    const double interval = 1.0 / tickRate;
 
     static int lastTick = -1;
     const int currentTick = static_cast<int>(now / interval);
@@ -128,12 +129,26 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNod
         return;
     lastTick = currentTick;
 
-    // compute waiting counts and find the heaviest queue
+    const int minGreenTime = GetConfigInt(configNode, "tl_adaptive_min_green_time", 5);
+
+    // if any light is green and below min green time, do nothing
+    for (const auto &light : group.trafficLights)
+    {
+        if (light.state == TrafficLightState::GO)
+        {
+            const double greenAge = now - light.lastGreenTime;
+            if (greenAge < minGreenTime)
+                return;
+        }
+    }
+
+    // Find biggest queue
     size_t maxWaiting = 0;
     TrafficLight *biggestQueueLight = nullptr;
-    for (TrafficLight &light : group.trafficLights)
+
+    for (auto &light : group.trafficLights)
     {
-        size_t waiting = light.carsWaiting.size();
+        const size_t waiting = light.carsWaiting.size();
         if (waiting > maxWaiting)
         {
             maxWaiting = waiting;
@@ -141,76 +156,36 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNod
         }
     }
 
-    // if nobody waiting return
-    if (maxWaiting == 0)
+    // no cars waiting, do nothing
+    if (!biggestQueueLight || maxWaiting == 0)
         return;
 
-    // first, turn off any green lights with zero waiting cars
-    for (auto &light : group.trafficLights)
-    {
-        if (light.carsWaiting.empty() && light.state == TrafficLightState::GO)
-        {
-            light.state = TrafficLightState::STOP;
-        }
-    }
-    // next, turn off any green lights that have exceeded minimum green time
-    for (auto &light : group.trafficLights)
-    {
-        double greenAge = now - light.lastGreenTime;
-        if (light.state == TrafficLightState::GO && greenAge >= GetConfigInt(configNode, "tl_adaptive_min_green_time", 5))
-        {
-            light.state = TrafficLightState::STOP;
-        }
-    }
-    // If a light is currently green, let it complete at least the minimum green time before switching away.
-    for (auto &light : group.trafficLights)
-    {
-        if (light.state == TrafficLightState::GO)
-        {
-            double greenAge = now - light.lastGreenTime;
-            if (greenAge < GetConfigInt(configNode, "tl_adaptive_min_green_time", 5))
-            {
-                return; // do not switch yet
-            }
-        }
-    }
-
-    // Priority rule: if the busiest queue has >= 3 cars and that light hasn't been green for >= 10s, make it green
-    if (!biggestQueueLight)
-        return;
-
-    double sinceGreen = now - biggestQueueLight->lastGreenTime;
+    // prioritize lights with at least 3 cars waiting and that haven't been green in 10 seconds
+    const double sinceGreen = now - biggestQueueLight->lastGreenTime;
     if (biggestQueueLight->carsWaiting.size() >= 3 && sinceGreen >= 10.0)
     {
-        // switch biggest to GO and others to STOP
-        biggestQueueLight->state = TrafficLightState::GO;
-        biggestQueueLight->lastGreenTime = now;
-        for (auto &light : group.trafficLights)
+        // Switch only if not already green
+        if (biggestQueueLight->state != TrafficLightState::GO)
         {
-            if (&light != biggestQueueLight)
-            {
+            for (auto &light : group.trafficLights)
                 light.state = TrafficLightState::STOP;
-            }
+
+            biggestQueueLight->state = TrafficLightState::GO;
+            biggestQueueLight->lastGreenTime = now;
         }
         return;
     }
 
-    // Fallback behavior:
-    // If there's no green, make the busiest queue to green
-    bool anyGreen = false;
+    // Fallback: ensure at least one green exists
     for (const auto &light : group.trafficLights)
     {
         if (light.state == TrafficLightState::GO)
-        {
-            anyGreen = true;
-            break;
-        }
+            return;
     }
-    if (!anyGreen && biggestQueueLight)
-    {
-        biggestQueueLight->state = TrafficLightState::GO;
-        biggestQueueLight->lastGreenTime = now;
-    }
+
+    // no green, switch biggest queue to green
+    biggestQueueLight->state = TrafficLightState::GO;
+    biggestQueueLight->lastGreenTime = now;
 }
 
 void DrawTrafficLightGroup(const TrafficLightGroup &light)

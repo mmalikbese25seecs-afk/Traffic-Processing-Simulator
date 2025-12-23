@@ -2,7 +2,6 @@
 #include "MathUtil.hpp"
 #include <fstream>
 #include <sstream>
-#include <algorithm>
 #include <cctype>
 
 bool SaveConfigToFile(Node& root, const std::string& path)

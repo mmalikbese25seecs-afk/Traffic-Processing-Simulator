@@ -10,7 +10,7 @@
 
 #include "config.hpp"
 
-void DrawInstructions();
+void DrawInstructions(const GameState &state);
 
 int main()
 {
@@ -97,7 +97,7 @@ int main()
 
         if (!showConfig)
         {
-            DrawInstructions();
+            DrawInstructions(gameState);
         }
 
         if (showConfig)
@@ -118,11 +118,15 @@ int main()
     return 0;
 }
 
-void DrawInstructions()
+void DrawInstructions(const GameState &state)
 {
-    const int fontSize = 16;
+    const int fontSize = 20;
     const int lineHeight = 22;
     int y = 10;
+
+    std::string currentMode = GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false) ? "Adaptive Mode" : "Timed Mode";
+    DrawText(("Current Mode: " + std::string(currentMode)).c_str(), 10, y, fontSize, RAYWHITE);
+    y += lineHeight;
 
     DrawText("Controls:", 10, y, fontSize, RAYWHITE);
     y += lineHeight;
