@@ -1,10 +1,10 @@
 #include "ConfigTree.hpp"
 
 void LayoutNodes(
-    Node& node,
-    std::vector<Field>& outFields,
+    Node &node,
+    std::vector<Field> &outFields,
     float x,
-    float& y,
+    float &y,
     float indent,
     float width,
     float itemHeight,
@@ -12,13 +12,13 @@ void LayoutNodes(
 {
     if (!node.value.has_value())
     {
-        Rectangle r = { x + indent, y, width - indent, itemHeight };
-        outFields.push_back({ r, &node, true, nullptr, indent });
+        Rectangle r = {x + indent, y, width - indent, itemHeight};
+        outFields.push_back({r, &node, true, nullptr, indent});
         y += itemHeight + gap;
 
         if (!node.collapsed)
         {
-            for (Node& c : node.children)
+            for (Node &c : node.children)
             {
                 LayoutNodes(c, outFields, x, y, indent + 18.0f, width, itemHeight, gap);
             }
@@ -26,17 +26,36 @@ void LayoutNodes(
     }
     else
     {
-        Rectangle r = { x + indent, y, width - indent, itemHeight };
-        outFields.push_back({ r, &node, false, &(*node.value), indent });
+        Rectangle r = {x + indent, y, width - indent, itemHeight};
+        outFields.push_back({r, &node, false, &(*node.value), indent});
         y += itemHeight + gap;
     }
 }
 
-void CollectConfigPointers(Node& node, std::vector<ConfigValue*>& out)
+void CollectConfigPointers(Node &node, std::vector<ConfigValue *> &out)
 {
     if (node.value.has_value())
         out.push_back(&(*node.value));
 
-    for (Node& c : node.children)
+    for (Node &c : node.children)
         CollectConfigPointers(c, out);
+}
+
+ConfigValue *FindConfig(Node &node, const std::string &title)
+{
+    // base case
+    if (node.value.has_value() && node.title == title)
+    {
+        return &node.value.value();
+    }
+
+    // recusively check all children
+    for (auto &child : node.children)
+    {
+        ConfigValue *found = FindConfig(child, title);
+        if (found)
+            return found;
+    }
+
+    return nullptr;
 }

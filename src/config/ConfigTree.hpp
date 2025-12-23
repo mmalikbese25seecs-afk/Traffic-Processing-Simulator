@@ -34,3 +34,4 @@ void LayoutNodes(
 );
 
 void CollectConfigPointers(Node& node, std::vector<ConfigValue*>& out);
+ConfigValue* FindConfig(Node& node, const std::string& title);
