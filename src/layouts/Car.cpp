@@ -16,8 +16,8 @@ void m_updateVelocity(Car &car, const GameState &state)
 
 bool m_checkCarCollision(Car &car, GameState &state)
 {
-    float detectionRadius = GetConfigFloat(state.rootConfigNode, "radius", 50.f);
-    float detectionAngle = GetConfigInt(state.rootConfigNode, "angle_deg", 45);
+    int detectionRadius = GetConfigInt(state.rootConfigNode, "radius", 50);
+    int detectionAngle = GetConfigInt(state.rootConfigNode, "angle_deg", 45);
 
     bool debugOtherCars = GetConfigBool(state.rootConfigNode, "debug_car_detection_other_cars", false);
 
@@ -66,8 +66,8 @@ void m_DebugDrawCarArc(const Car &car, const Node &rootConfigNode)
     // compute forward angle in degrees (raylib space)
     float forwardAngleDeg = atan2f(forward.y, forward.x) * RAD2DEG;
 
-    float detectionAngle = GetConfigInt(rootConfigNode, "angle_deg", 45);
-    float detectionRadius = GetConfigFloat(rootConfigNode, "radius", 50.f);
+    int detectionAngle = GetConfigInt(rootConfigNode, "angle_deg", 45);
+    int detectionRadius = GetConfigInt(rootConfigNode, "radius", 50);
 
     float startAngle = forwardAngleDeg - detectionAngle;
     float endAngle = forwardAngleDeg + detectionAngle;
@@ -87,7 +87,7 @@ void m_DebugDrawCarArc(const Car &car, const Node &rootConfigNode)
 
 void UpdateCar(Car &car, GameState &state)
 {
-    if (!TrafficLightUpdateCarState(state.trafficLightGroup, car) || !m_checkCarCollision(car, state))
+    if (!TrafficLightUpdateCarState(state.trafficLightGroup, car, state) || !m_checkCarCollision(car, state))
     {
         car._velocity = {0.f, 0.f};
     }

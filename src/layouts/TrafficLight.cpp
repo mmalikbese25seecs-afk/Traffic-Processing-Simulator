@@ -15,13 +15,13 @@ void UpdateTrafficLights(GameState &state)
     TrafficLightGroup &group = state.trafficLightGroup;
 
     // choose switching method
-    if (TRAFFIC_LIGHT_ADAPTIVE_ENABLED)
+    if (GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false))
     {
-        SwitchTrafficLightsAdaptive(group);
+        SwitchTrafficLightsAdaptive(group, state.rootConfigNode);
     }
     else
     {
-        SwitchTrafficLightsTimed(group);
+        SwitchTrafficLightsTimed(group, state.rootConfigNode);
     }
 
     // update carsWaiting sets for debugging
@@ -38,7 +38,7 @@ void UpdateTrafficLights(GameState &state)
     }
 
     // debug display of cars passed / waiting
-    if (DEBUG_TRAFFIC_LIGHT_CAR_PASSED)
+    if (GetConfigBool(state.rootConfigNode, "debug_tl_car_passed", false))
     {
         for (auto &light : group.trafficLights)
         {
@@ -55,7 +55,7 @@ void UpdateTrafficLights(GameState &state)
 // GREEN_PHASE -> YELLOW_PHASE (current group's lights become WAIT)
 // YELLOW_PHASE -> ALL_RED_PHASE (both groups STOP)
 // ALL_RED_PHASE -> GREEN_PHASE (toggle currentGroup; that group's lights become GO)
-void SwitchTrafficLightsTimed(TrafficLightGroup &group)
+void SwitchTrafficLightsTimed(TrafficLightGroup &group, const Node &configNode)
 {
     double now = GetTime();
 
@@ -66,13 +66,13 @@ void SwitchTrafficLightsTimed(TrafficLightGroup &group)
     switch (group.phase)
     {
     case TrafficLightTimedGroupPhase::GREEN_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_GREEN_DURATION;
+        phaseDuration = GetConfigInt(configNode, "green_duration", 10);
         break;
     case TrafficLightTimedGroupPhase::YELLOW_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_YELLOW_DURATION;
+        phaseDuration = GetConfigInt(configNode, "yellow_duration", 3);
         break;
     case TrafficLightTimedGroupPhase::ALL_RED_PHASE:
-        phaseDuration = TRAFFIC_LIGHT_ALL_RED_DURATION;
+        phaseDuration = GetConfigFloat(configNode, "all_red_duration", 0.5f);
         break;
     }
 
@@ -117,10 +117,10 @@ void SwitchTrafficLightsTimed(TrafficLightGroup &group)
     group.phaseStartTime = now;
 }
 
-void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
+void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNode)
 {
     const double now = GetTime();
-    const double interval = 1.0 / TRAFFIC_LIGHT_ADAPTIVE_TICK_RATE;
+    const double interval = 1.0 / GetConfigInt(configNode, "tl_adaptive_tick_rate", 1);
 
     static int lastTick = -1;
     const int currentTick = static_cast<int>(now / interval);
@@ -157,7 +157,7 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
     for (auto &light : group.trafficLights)
     {
         double greenAge = now - light.lastGreenTime;
-        if (light.state == TrafficLightState::GO && greenAge >= TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME)
+        if (light.state == TrafficLightState::GO && greenAge >= GetConfigInt(configNode, "tl_adaptive_min_green_time", 5))
         {
             light.state = TrafficLightState::STOP;
         }
@@ -168,7 +168,7 @@ void SwitchTrafficLightsAdaptive(TrafficLightGroup &group)
         if (light.state == TrafficLightState::GO)
         {
             double greenAge = now - light.lastGreenTime;
-            if (greenAge < TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME)
+            if (greenAge < GetConfigInt(configNode, "tl_adaptive_min_green_time", 5))
             {
                 return; // do not switch yet
             }
@@ -245,13 +245,13 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
         DrawCircleV(trafficLight.position, TRAFFIC_LIGHT_RADIUS + TRAFFIC_LIGHT_BG_PADDING, TRAFFIC_LIGHT_BG_COLOR);
 
         // draw colored circle based on state
-        Color trafficLightColor = TRAFFIC_LIGHT_OFF_COLOR;
+        Color trafficLightColor = RED;
         if (trafficLight.state == TrafficLightState::GO)
-            trafficLightColor = TRAFFIC_LIGHT_ON_COLOR;
+            trafficLightColor = GREEN;
         else if (trafficLight.state == TrafficLightState::WAIT)
-            trafficLightColor = TRAFFIC_LIGHT_YELLOW_COLOR;
+            trafficLightColor = YELLOW;
         else
-            trafficLightColor = TRAFFIC_LIGHT_OFF_COLOR;
+            trafficLightColor = RED;
 
         DrawCircleV(trafficLight.position, TRAFFIC_LIGHT_RADIUS, trafficLightColor);
     }
@@ -259,13 +259,13 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
 
 void ForceUpdateTrafficLights(GameState &state)
 {
-    if (TRAFFIC_LIGHT_ADAPTIVE_ENABLED)
+    if (GetConfigBool(state.rootConfigNode, "tl_adaptive_enabled", false))
     {
-        SwitchTrafficLightsAdaptive(state.trafficLightGroup);
+        SwitchTrafficLightsAdaptive(state.trafficLightGroup, state.rootConfigNode);
     }
     else
     {
-        SwitchTrafficLightsTimed(state.trafficLightGroup);
+        SwitchTrafficLightsTimed(state.trafficLightGroup, state.rootConfigNode);
     }
 }
 
@@ -277,7 +277,7 @@ void ForceUpdateTrafficLights(GameState &state)
 //      * WAIT (yellow) -> allow only if car is too close to stop
 //      * STOP          -> do not allow
 //  - Otherwise allow.
-bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
+bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, const GameState &state)
 {
     // get shortest distance from traffic light to car
     TrafficLight *closestLight = nullptr;
@@ -297,7 +297,7 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
         return true;
 
     // far away from traffic light -> ignore it until close enough
-    if (shortestDistance > TRAFFIC_LIGHT_CAR_DETECTION_RANGE)
+    if (shortestDistance > GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50))
         return true;
 
     // check if car is moving towards the signal
@@ -327,7 +327,7 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
     // determine behavior based on light state
     if (closestLight->state == TrafficLightState::GO)
     {
-        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, GREEN);
         return true;
     }
@@ -337,14 +337,14 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
         bool carBeforeWaitingPos = Vector2AfterPoint(closestLight->waitingPosition, car.position, closestLight->direction);
         if (carBeforeWaitingPos)
         {
-            if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+            if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
                 __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
 
             return true;
         }
 
         // else stop
-        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, Fade(RED, 0.5f));
 
         return false;
@@ -360,7 +360,7 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car)
 
         bool tooCloseToStop = shortestDistance <= minDistanceToStop;
 
-        if (DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS)
+        if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, ORANGE);
 
         // if too close, allow to move to clear intersection; otherwise stop

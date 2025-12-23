@@ -6,37 +6,34 @@
 #include <array>
 #include <cstdint>
 #include <unordered_set>
+#include "ConfigTree.hpp"
 
 struct Car;
 struct GameState;
 
 // debug: allow cars to ignore lights for visual/testing
-constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS = true;
-constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_PASSED = true;
+// constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_CAN_PASS = true;
+// constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_PASSED = true;
 
 // traffic light graphics constants
 constexpr float TRAFFIC_LIGHT_RADIUS = 10.f;
-constexpr Color TRAFFIC_LIGHT_ON_COLOR = GREEN;
-constexpr Color TRAFFIC_LIGHT_OFF_COLOR = RED;
 constexpr Color TRAFFIC_LIGHT_BG_COLOR = BLACK;
 constexpr float TRAFFIC_LIGHT_BG_PADDING = 5.f;
-// distance from traffic light to stop car
-constexpr float TRAFFIC_LIGHT_CAR_DETECTION_RANGE = 50.f;
 constexpr float TRAFFIC_LIGHT_CAP_DISTANCE = 25.f;
 
-// realistic timing (seconds)
-constexpr float TRAFFIC_LIGHT_GREEN_DURATION = 10.f;
-constexpr float TRAFFIC_LIGHT_YELLOW_DURATION = 3.f;
-constexpr float TRAFFIC_LIGHT_ALL_RED_DURATION = 0.5f;
+// distance from traffic light to stop car
+// constexpr float TRAFFIC_LIGHT_CAR_DETECTION_RANGE = 50.f;
 
-// colors
-constexpr Color TRAFFIC_LIGHT_YELLOW_COLOR = YELLOW;
+// realistic timing (seconds)
+// constexpr float TRAFFIC_LIGHT_GREEN_DURATION = 10.f;
+// constexpr float TRAFFIC_LIGHT_YELLOW_DURATION = 3.f;
+// constexpr float TRAFFIC_LIGHT_ALL_RED_DURATION = 0.5f;
 
 // adaptive
-constexpr bool TRAFFIC_LIGHT_ADAPTIVE_ENABLED = true;
-constexpr float TRAFFIC_LIGHT_ADAPTIVE_TICK_RATE = 1.f; // seconds
-constexpr uint16_t TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME = 5; // seconds
-constexpr uint16_t TRAFFIC_LIGHT_ADAPTIVE_MAX_GREEN_TIME = 20; // seconds
+// constexpr bool TRAFFIC_LIGHT_ADAPTIVE_ENABLED = true;
+// constexpr float TRAFFIC_LIGHT_ADAPTIVE_TICK_RATE = 1.f; // seconds
+// constexpr uint16_t TRAFFIC_LIGHT_ADAPTIVE_MIN_GREEN_TIME = 5; // seconds
+// constexpr uint16_t TRAFFIC_LIGHT_ADAPTIVE_MAX_GREEN_TIME = 20; // seconds
 
 enum class TrafficLightState
 {
@@ -80,10 +77,10 @@ struct TrafficLightGroup
 };
 
 void UpdateTrafficLights(GameState &state);
-void SwitchTrafficLightsTimed(TrafficLightGroup &group);
-void SwitchTrafficLightsAdaptive(TrafficLightGroup &group);
+void SwitchTrafficLightsTimed(TrafficLightGroup &group, const Node &configNode);
+void SwitchTrafficLightsAdaptive(TrafficLightGroup &group, const Node &configNode);
 void DrawTrafficLightGroup(const TrafficLightGroup &light);
 
 void ForceUpdateTrafficLights(GameState &state);
 
-bool TrafficLightUpdateCarState(TrafficLightGroup &group, Car &car);
+bool TrafficLightUpdateCarState(TrafficLightGroup &group, Car &car, const GameState &state);

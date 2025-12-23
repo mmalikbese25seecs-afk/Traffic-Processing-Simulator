@@ -31,13 +31,11 @@ Node BuildConfigTree()
 
     Node tl;
     tl.title = "Traffic Light";
-    tl.children.push_back(
-        Node{"Wait Pos Offset", ConfigValue{"wait_pos_offset", ValueType::Int, 20, 0, 100}, {}, false});
 
     Node tl_det;
     tl_det.title = "Detection";
     tl_det.children.push_back(
-        Node{"Car Detection Range", ConfigValue{"car_detection_range", ValueType::Int, 50, 0, 200}, {}, false});
+        Node{"Car Detection Range", ConfigValue{"tl_car_detection_range", ValueType::Int, 50, 0, 200}, {}, false});
     tl.children.push_back(tl_det);
 
     Node tl_timing;
@@ -56,13 +54,13 @@ Node BuildConfigTree()
     Node tl_adaptive;
     tl_adaptive.title = "Adaptive";
     tl_adaptive.children.push_back(
-        Node{"Enabled", ConfigValue{"enabled", ValueType::Bool, true}, {}, false});
+        Node{"Enabled", ConfigValue{"tl_adaptive_enabled", ValueType::Bool, true}, {}, false});
     tl_adaptive.children.push_back(
-        Node{"Tick Rate", ConfigValue{"tick_rate", ValueType::Int, 1, 1, 10}, {}, false});
+        Node{"Tick Rate", ConfigValue{"tl_adaptive_tick_rate", ValueType::Int, 1, 1, 10}, {}, false});
     tl_adaptive.children.push_back(
-        Node{"Min Green Time", ConfigValue{"min_green_time", ValueType::Int, 5, 1, 20}, {}, false});
+        Node{"Min Green Time", ConfigValue{"tl_adaptive_min_green_time", ValueType::Int, 5, 1, 20}, {}, false});
     tl_adaptive.children.push_back(
-        Node{"Max Green Time", ConfigValue{"max_green_time", ValueType::Int, 20, 5, 60}, {}, false});
+        Node{"Max Green Time", ConfigValue{"tl_adaptive_max_green_time", ValueType::Int, 20, 5, 60}, {}, false});
     tl.children.push_back(tl_adaptive);
 
     Node debug_options;
