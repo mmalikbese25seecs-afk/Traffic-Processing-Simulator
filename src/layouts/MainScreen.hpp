@@ -3,6 +3,8 @@
 #include <vector>
 #include <raylib.h>
 
+#include "ConfigTree.hpp"
+
 #include "Car.hpp"
 #include "TrafficLight.hpp"
 
@@ -23,6 +25,8 @@ struct GameState
     float deltaTime = 0.f;
 
     bool paused = false;
+
+    Node rootConfigNode;
 };
 
 void InitGameState(GameState &state);

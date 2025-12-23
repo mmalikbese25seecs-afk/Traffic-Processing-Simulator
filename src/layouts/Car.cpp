@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <variant>
 
 #include "MainScreen.hpp"
 #include "Debug.hpp"
@@ -13,7 +14,7 @@ void m_updateVelocity(Car &car, const GameState &state)
     car.position.y += car._velocity.y * state.deltaTime;
 }
 
-bool m_checkCarCollision(Car &car, const GameState &state)
+bool m_checkCarCollision(Car &car, GameState &state)
 {
     for (const auto &otherCar : state.cars)
     {
@@ -24,7 +25,15 @@ bool m_checkCarCollision(Car &car, const GameState &state)
         float distance = Vector2Distance(car.position, otherCar.position);
         if (distance < CAR_DETECTION_RADIUS)
         {
-            if (DEBUG_CAR_DETECTION_OTHER_CARS)
+            ConfigValue *cfg = TryReadConfig(state.rootConfigNode, "debug_car_detection_other_cars");
+            bool debugOtherCars = false;
+            if (cfg && cfg->type == ValueType::Bool)
+            {
+                if (auto p = std::get_if<bool>(&cfg->value))
+                    debugOtherCars = *p;
+            }
+
+            if (debugOtherCars)
             {
                 __DebugDrawVectorAB(car.position, otherCar.position, 2, true, MAGENTA);
             }

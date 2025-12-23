@@ -6,33 +6,37 @@
 static std::string ValueToString(const ConfigValue &cv)
 {
     std::ostringstream ss;
-    if (cv.type == ValueType::Int)
-        ss << std::get<int>(cv.value);
-    else if (cv.type == ValueType::Float)
-        ss << std::fixed << std::setprecision(2) << std::get<float>(cv.value);
-    else
-        ss << (std::get<bool>(cv.value) ? "true" : "false");
+    switch (cv.type)
+    {
+    case ValueType::Int:
+    {
+        if (auto p = std::get_if<int>(&cv.value))
+            ss << *p;
+        else
+            ss << "ERR";
+        break;
+    }
+    case ValueType::Float:
+    {
+        if (auto p = std::get_if<float>(&cv.value))
+            ss << std::fixed << std::setprecision(2) << *p;
+        else
+            ss << "ERR";
+        break;
+    }
+    case ValueType::Bool:
+    {
+        if (auto p = std::get_if<bool>(&cv.value))
+            ss << (*p ? "true" : "false");
+        else
+            ss << "ERR";
+        break;
+    }
+    default:
+        ss << "ERR";
+        break;
+    }
     return ss.str();
-}
-
-static void ApplyTextEdit(ConfigValue &cv, const std::string &text)
-{
-    try
-    {
-        if (cv.type == ValueType::Int)
-        {
-            int v = std::stoi(text);
-            cv.value = (int)ClampFloat(v, cv.min_value, cv.max_value);
-        }
-        else if (cv.type == ValueType::Float)
-        {
-            float v = std::stof(text);
-            cv.value = ClampFloat(v, cv.min_value, cv.max_value);
-        }
-    }
-    catch (...)
-    {
-    }
 }
 
 void DrawConfigUI(
@@ -102,6 +106,10 @@ void DrawConfigUI(
         }
         else
         {
+            // f.config is invalid addr here
+            if (!f.config)
+                continue;
+
             bool selected = (state.selected == f.config);
             DrawRectangleRec(r, selected ? Color{200, 230, 200, 255} : Color{220, 220, 220, 255});
             DrawRectangleLinesEx(r, 1, BLACK);
@@ -120,8 +128,8 @@ void DrawConfigUI(
 
                 if (f.config->type == ValueType::Bool)
                 {
-                    bool &b = std::get<bool>(f.config->value);
-                    b = !b;
+                    if (auto b = std::get_if<bool>(&f.config->value))
+                        *b = !*b;
                 }
             }
         }

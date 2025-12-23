@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include <vector>
 #include <optional>
+#include <variant>
 #include <string>
 
 struct Node
@@ -16,22 +17,23 @@ struct Node
 struct Field
 {
     Rectangle rect;
-    Node* node;
+    Node *node;
     bool is_header;
-    ConfigValue* config;
+    ConfigValue *config;
     float indent;
 };
 
 void LayoutNodes(
-    Node& node,
-    std::vector<Field>& outFields,
+    Node &node,
+    std::vector<Field> &outFields,
     float x,
-    float& y,
+    float &y,
     float indent,
     float width,
     float itemHeight,
-    float gap
-);
+    float gap);
 
-void CollectConfigPointers(Node& node, std::vector<ConfigValue*>& out);
-ConfigValue* FindConfig(Node& node, const std::string& title);
+void CollectConfigPointers(Node &node, std::vector<ConfigValue *> &out);
+ConfigValue *TryReadConfig(Node &node, const std::string &title);
+const ConfigValue *TryReadConfig(const Node &node, const std::string &title);
+void ApplyTextEdit(ConfigValue &cv, const std::string &text);
