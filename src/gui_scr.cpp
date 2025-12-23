@@ -79,21 +79,6 @@ static Node BuildConfigTree()
     Node debug_options;
     debug_options.title = "Debug Options";
 
-    /*
-    debug
----enabled = true
-
----car
-------detection_arc = false
-------detection_other_cars = false
-------state = true
-
----traffic_light
-------car_can_pass = true
-------car_passed = true
-------draw_positions = false
-    */
-
     debug_options.children.push_back(
         Node{"Enabled", ConfigValue{"debug_enabled", ValueType::Bool, false}, {}, false});
 
@@ -127,7 +112,7 @@ static Node BuildConfigTree()
     return root;
 }
 
-int main()
+int main_()
 {
     InitWindow(1000, 780, "Config Editor");
     SetTargetFPS(60);

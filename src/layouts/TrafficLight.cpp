@@ -16,11 +16,11 @@ void UpdateTrafficLights(GameState &state)
     // choose switching method
     if (TRAFFIC_LIGHT_ADAPTIVE_ENABLED)
     {
-        SwitchTrafficLightsAdaptive(group); // placeholder
+        SwitchTrafficLightsAdaptive(group);
     }
     else
     {
-        SwitchTrafficLightsTimed(group); // timed handles phase duration internally
+        SwitchTrafficLightsTimed(group);
     }
 
     // update carsWaiting sets for debugging
@@ -258,7 +258,14 @@ void DrawTrafficLightGroup(const TrafficLightGroup &light)
 
 void ForceUpdateTrafficLights(GameState &state)
 {
-    SwitchTrafficLightsTimed(state.trafficLightGroup);
+    if (TRAFFIC_LIGHT_ADAPTIVE_ENABLED)
+    {
+        SwitchTrafficLightsAdaptive(state.trafficLightGroup);
+    }
+    else
+    {
+        SwitchTrafficLightsTimed(state.trafficLightGroup);
+    }
 }
 
 // Behavior:
