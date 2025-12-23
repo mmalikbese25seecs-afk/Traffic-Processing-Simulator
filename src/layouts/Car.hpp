@@ -4,16 +4,10 @@
 
 struct GameState;
 
-constexpr bool DEBUG_CAR_DETECTION_ARC = false;
-constexpr bool DEBUG_CAR_DETECTION_OTHER_CARS = false;
-constexpr bool DEBUG_CAR_STATE = true;
 
 constexpr float CAR_WIDTH = 40.f;
 constexpr float CAR_HEIGHT = 20.f;
 constexpr float CAR_SPEED = 100.f;
-// distance from car to other car to stop
-constexpr float CAR_DETECTION_RADIUS = 50.f;
-constexpr float CAR_DETECTION_ANGLE_DEG = 45.f;
 
 enum class CarState
 {
@@ -35,4 +29,4 @@ struct Car
 };
 
 void UpdateCar(Car &car, GameState &state);
-void DrawCar(const Car &car);
+void DrawCar(const Car &car, const GameState& state);

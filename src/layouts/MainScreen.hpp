@@ -12,9 +12,6 @@ constexpr float START_OFFSET = -10.f;
 constexpr float SPACING = 50.f;
 constexpr float TRAFFIC_LIGHT_WAIT_POS_OFFSET = 20.f;
 
-constexpr float MAIN_SCREEN_CAR_SPAWN_CHANCE = 1.0f;
-constexpr bool MAIN_SCREEN_DEBUG_DRAW_TRAFFIC_LIGHT_POSITIONS = false;
-
 struct GameState
 {
     TrafficLightGroup trafficLightGroup;

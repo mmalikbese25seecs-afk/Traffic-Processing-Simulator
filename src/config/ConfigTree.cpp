@@ -59,22 +59,19 @@ ConfigValue *TryReadConfig(Node &node, const std::string &title)
 // read-only version
 const ConfigValue *TryReadConfig(const Node &node, const std::string &title)
 {
-    if (node.value.has_value() && node.title == title)
+    if (node.value.has_value() && node.value->label == title)
         return &(*node.value);
 
     for (const Node &child : node.children)
     {
-        const ConfigValue *found = TryReadConfig(child, title);
-        if (found)
+        if (const ConfigValue *found = TryReadConfig(child, title))
             return found;
     }
-
     return nullptr;
 }
 
 void ApplyTextEdit(ConfigValue &cv, const std::string &text)
 {
-    std::cout << "APPLY TEXT EDIT";
     try
     {
         switch (cv.type)
@@ -113,4 +110,40 @@ void ApplyTextEdit(ConfigValue &cv, const std::string &text)
     {
         // ignore invalid input
     }
+}
+
+float GetConfigFloat(const Node &root, const char *key, float defaultValue)
+{
+    if (auto cfg = TryReadConfig(root, key))
+    {
+        if (auto f = std::get_if<float>(&cfg->value))
+        {
+            return *f;
+        }
+    }
+    return defaultValue;
+}
+
+int GetConfigInt(const Node &root, const char *key, int defaultValue)
+{
+    if (auto cfg = TryReadConfig(root, key))
+    {
+        if (auto i = std::get_if<int>(&cfg->value))
+        {
+            return *i;
+        }
+    }
+    return defaultValue;
+}
+
+bool GetConfigBool(const Node &root, const char *key, bool defaultValue)
+{
+    if (auto cfg = TryReadConfig(root, key))
+    {
+        if (auto b = std::get_if<bool>(&cfg->value))
+        {
+            return *b;
+        }
+    }
+    return defaultValue;
 }

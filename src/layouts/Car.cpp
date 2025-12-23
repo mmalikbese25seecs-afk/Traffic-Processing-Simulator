@@ -16,6 +16,11 @@ void m_updateVelocity(Car &car, const GameState &state)
 
 bool m_checkCarCollision(Car &car, GameState &state)
 {
+    float detectionRadius = GetConfigFloat(state.rootConfigNode, "radius", 50.f);
+    float detectionAngle = GetConfigInt(state.rootConfigNode, "angle_deg", 45);
+
+    bool debugOtherCars = GetConfigBool(state.rootConfigNode, "debug_car_detection_other_cars", false);
+
     for (const auto &otherCar : state.cars)
     {
         // skip self
@@ -23,21 +28,14 @@ bool m_checkCarCollision(Car &car, GameState &state)
             continue;
 
         float distance = Vector2Distance(car.position, otherCar.position);
-        if (distance < CAR_DETECTION_RADIUS)
+        if (distance < detectionRadius)
         {
-            bool debugOtherCars = false;
-            if (auto cfg = TryReadConfig(state.rootConfigNode, "debug_car_detection_other_cars"))
-            {
-                if (auto b = std::get_if<bool>(&cfg->value))
-                    debugOtherCars = *b;
-            }
-
             if (debugOtherCars)
             {
                 __DebugDrawVectorAB(car.position, otherCar.position, 2, true, MAGENTA);
             }
 
-            bool isCarInFront = Vector2AfterPoint(otherCar.position, car.position, car.desiredVelocity, CAR_DETECTION_ANGLE_DEG);
+            bool isCarInFront = Vector2AfterPoint(otherCar.position, car.position, car.desiredVelocity, detectionAngle);
 
             // other car is in front within detection angle
             if (isCarInFront)
@@ -52,35 +50,39 @@ bool m_checkCarCollision(Car &car, GameState &state)
     return true;
 }
 
-void m_DebugDrawCarArc(const Car &car)
+void m_DebugDrawCarArc(const Car &car, const Node &rootConfigNode)
 {
-    if (DEBUG_CAR_DETECTION_ARC)
-    {
-        if (Vector2IsZero(car.desiredVelocity))
-            return;
+    bool debugArc = GetConfigBool(rootConfigNode, "debug_car_detection_arc", false);
+    if (!debugArc)
+        return;
 
-        // cannot determine direction
-        Vector2 forward = car.desiredVelocity;
-        Vector2Normalize(forward);
+    if (Vector2IsZero(car.desiredVelocity))
+        return;
 
-        // compute forward angle in degrees (raylib space)
-        float forwardAngleDeg = atan2f(forward.y, forward.x) * RAD2DEG;
+    // cannot determine direction
+    Vector2 forward = car.desiredVelocity;
+    Vector2Normalize(forward);
 
-        float startAngle = forwardAngleDeg - CAR_DETECTION_ANGLE_DEG;
-        float endAngle = forwardAngleDeg + CAR_DETECTION_ANGLE_DEG;
+    // compute forward angle in degrees (raylib space)
+    float forwardAngleDeg = atan2f(forward.y, forward.x) * RAD2DEG;
 
-        // debug: draw detection arc
-        __DebugDrawCircleArc(car.position, CAR_DETECTION_RADIUS, startAngle, endAngle, Fade(GREEN, 0.25f));
+    float detectionAngle = GetConfigInt(rootConfigNode, "angle_deg", 45);
+    float detectionRadius = GetConfigFloat(rootConfigNode, "radius", 50.f);
 
-        // debug: draw forward direction
-        __DebugDrawVectorAt(car.position, forward, CAR_DETECTION_RADIUS, 2);
+    float startAngle = forwardAngleDeg - detectionAngle;
+    float endAngle = forwardAngleDeg + detectionAngle;
 
-        // debug: draw hands
-        Vector2 arcA = Vector2Rotate(forward, startAngle - forwardAngleDeg);
-        Vector2 arcB = Vector2Rotate(forward, endAngle - forwardAngleDeg);
-        __DebugDrawVectorAt(car.position, arcA, CAR_DETECTION_RADIUS, 2, false, YELLOW);
-        __DebugDrawVectorAt(car.position, arcB, CAR_DETECTION_RADIUS, 2, false, YELLOW);
-    }
+    // debug: draw detection arc
+    __DebugDrawCircleArc(car.position, detectionRadius, startAngle, endAngle, Fade(GREEN, 0.25f));
+
+    // debug: draw forward direction
+    __DebugDrawVectorAt(car.position, forward, detectionRadius, 2);
+
+    // debug: draw hands
+    Vector2 arcA = Vector2Rotate(forward, startAngle - forwardAngleDeg);
+    Vector2 arcB = Vector2Rotate(forward, endAngle - forwardAngleDeg);
+    __DebugDrawVectorAt(car.position, arcA, detectionRadius, 2, false, YELLOW);
+    __DebugDrawVectorAt(car.position, arcB, detectionRadius, 2, false, YELLOW);
 }
 
 void UpdateCar(Car &car, GameState &state)
@@ -102,9 +104,11 @@ void UpdateCar(Car &car, GameState &state)
     {
         car.rotation = AngleToDegrees(atan2f(vel.y, vel.x));
     }
+
+    m_DebugDrawCarArc(car, state.rootConfigNode);
 }
 
-void DrawCar(const Car &car)
+void DrawCar(const Car &car, const GameState& state)
 {
     Rectangle carRect = {
         .x = car.position.x,
@@ -119,9 +123,7 @@ void DrawCar(const Car &car)
     };
     DrawRectanglePro(carRect, origin, car.rotation, car.color);
 
-    m_DebugDrawCarArc(car);
-
-    if (DEBUG_CAR_STATE)
+    if (GetConfigBool(state.rootConfigNode, "debug_car_state", true))
     {
         // draw green point if moving, orange if waiting
         Color stateColor = (car.state == CarState::MOVING) ? GREEN : ORANGE;

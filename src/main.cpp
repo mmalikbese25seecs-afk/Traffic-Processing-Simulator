@@ -35,6 +35,7 @@ int main()
         if (auto b = std::get_if<bool>(&cfg->value))
             std::cout << "Config 'debug_car_detection_other_cars' = " << (*b ? "true" : "false") << "\n";
     }
+    GetConfigBool(gameState.rootConfigNode, "debug_car_detection_other_cars", false);
 
     ConfigUIState configUI;
     bool showConfig = false;

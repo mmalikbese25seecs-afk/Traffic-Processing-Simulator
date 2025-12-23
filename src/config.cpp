@@ -13,12 +13,6 @@ Node BuildConfigTree()
     Node car;
     car.title = "Car";
 
-    Node movement;
-    movement.title = "Movement";
-    movement.children.push_back(
-        Node{"Speed", ConfigValue{"speed", ValueType::Int, 100, 0, 300}, {}, false});
-    car.children.push_back(movement);
-
     Node detection;
     detection.title = "Detection";
     detection.children.push_back(
@@ -30,11 +24,7 @@ Node BuildConfigTree()
     Node spawn;
     spawn.title = "Car Spawning";
     spawn.children.push_back(
-        Node{"Start Offset", ConfigValue{"start_offset", ValueType::Int, -10, -100, 100}, {}, false});
-    spawn.children.push_back(
-        Node{"Spacing", ConfigValue{"spacing", ValueType::Int, 50, 0, 500}, {}, false});
-    spawn.children.push_back(
-        Node{"Main Screen Spawn Chance",
+        Node{"Spawn Chance",
              ConfigValue{"main_screen_spawn_chance", ValueType::Float, 1.0f, 0.0f, 1.0f},
              {},
              false});
@@ -78,9 +68,6 @@ Node BuildConfigTree()
     Node debug_options;
     debug_options.title = "Debug Options";
 
-    debug_options.children.push_back(
-        Node{"Enabled", ConfigValue{"debug_enabled", ValueType::Bool, false}, {}, false});
-
     Node debug_car;
     debug_car.title = "Car";
     debug_car.children.push_back(
@@ -99,6 +86,8 @@ Node BuildConfigTree()
         Node{"Car Passed", ConfigValue{"debug_tl_car_passed", ValueType::Bool, false}, {}, false});
     debug_tl.children.push_back(
         Node{"Draw Positions", ConfigValue{"debug_tl_draw_positions", ValueType::Bool, false}, {}, false});
+    debug_tl.children.push_back(
+        Node{"Traffic Light Wait Positions", ConfigValue{"main_screen_debug_draw_traffic_light_positions", ValueType::Bool, true}, {}, false});
     debug_options.children.push_back(debug_tl);
 
     main_config.children.push_back(car);
