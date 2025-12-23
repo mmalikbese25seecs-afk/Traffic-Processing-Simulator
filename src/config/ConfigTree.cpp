@@ -11,18 +11,18 @@ void LayoutNodes(
     float itemHeight,
     float gap)
 {
-    Rectangle r = {x + indent, y, width - indent, itemHeight};
+    Rectangle rect = {x + indent, y, width - indent, itemHeight};
 
     if (node.value.has_value())
     {
         // leaf node with value
-        outFields.push_back({r, &node, false, &(*node.value), indent});
+        outFields.push_back({rect, &node, false, &(*node.value), indent});
         y += itemHeight + gap;
     }
     else
     {
         // header node
-        outFields.push_back({r, &node, true, nullptr, indent});
+        outFields.push_back({rect, &node, true, nullptr, indent});
         y += itemHeight + gap;
 
         if (!node.collapsed)
@@ -70,45 +70,47 @@ const ConfigValue *TryReadConfig(const Node &node, const std::string &title)
     return nullptr;
 }
 
-void ApplyTextEdit(ConfigValue &cv, const std::string &text)
+void ApplyTextEdit(ConfigValue &config, const std::string &text)
 {
     try
     {
-        switch (cv.type)
+        switch (config.type)
         {
         case ValueType::Int:
         {
-            int v = std::stoi(text);
-            if (v < static_cast<int>(cv.min_value))
-                v = static_cast<int>(cv.min_value);
-            if (v > static_cast<int>(cv.max_value))
-                v = static_cast<int>(cv.max_value);
-            cv.value = v;
+            int value = std::stoi(text);
+            // clamp
+            if (value < static_cast<int>(config.min_value))
+                value = static_cast<int>(config.min_value);
+            if (value > static_cast<int>(config.max_value))
+                value = static_cast<int>(config.max_value);
+            config.value = value;
             break;
         }
         case ValueType::Float:
         {
-            float v = std::stof(text);
-            if (v < cv.min_value)
-                v = cv.min_value;
-            if (v > cv.max_value)
-                v = cv.max_value;
-            cv.value = v;
+            float value = std::stof(text);
+            // clamp
+            if (value < config.min_value)
+                value = config.min_value;
+            if (value > config.max_value)
+                value = config.max_value;
+            config.value = value;
             break;
         }
         case ValueType::Bool:
         {
             if (text == "true" || text == "1")
-                cv.value = true;
+                config.value = true;
             else if (text == "false" || text == "0")
-                cv.value = false;
+                config.value = false;
             break;
         }
         }
     }
+    // ignore conversion errors
     catch (...)
     {
-        // ignore invalid input
     }
 }
 

@@ -6,20 +6,20 @@
 #include <iomanip>
 
 // Helper to convert ConfigValue to string
-static std::string ValueToString(const ConfigValue &cv)
+static std::string ValueToString(const ConfigValue &config)
 {
-    switch (cv.type)
+    switch (config.type)
     {
     case ValueType::Int:
-        return std::to_string(std::get<int>(cv.value));
+        return std::to_string(std::get<int>(config.value));
     case ValueType::Float:
     {
         std::ostringstream ss;
-        ss << std::fixed << std::setprecision(2) << std::get<float>(cv.value);
+        ss << std::fixed << std::setprecision(2) << std::get<float>(config.value);
         return ss.str();
     }
     case ValueType::Bool:
-        return std::get<bool>(cv.value) ? "true" : "false";
+        return std::get<bool>(config.value) ? "true" : "false";
     }
     return "ERR";
 }
@@ -27,13 +27,18 @@ static std::string ValueToString(const ConfigValue &cv)
 // Draws the config UI and updates pending edits map
 void DrawConfigUI(Node &root, ConfigUIState &state, float contentTop, float viewH, float contentW)
 {
-    const float itemH = 30.0f;
+    // height of each item
+    const float itemHeight = 30.0f;
+    // gap between items
     const float gap = 6.0f;
+    // horizontal margin for content
     const float marginX = 16.0f;
 
+    // field is gui representation of Node
     std::vector<Field> fields;
     float layoutY = contentTop;
-    LayoutNodes(root, fields, marginX, layoutY, 0.0f, contentW, itemH, gap);
+    // generate Fields
+    LayoutNodes(root, fields, marginX, layoutY, 0.0f, contentW, itemHeight, gap);
 
     Vector2 mouse = GetMousePosition();
     float wheel = GetMouseWheelMove();
@@ -50,53 +55,62 @@ void DrawConfigUI(Node &root, ConfigUIState &state, float contentTop, float view
             state.scrollY = maxScroll;
     }
 
+    // scissor means we only draw inside defined area
     BeginScissorMode((int)marginX - 2, (int)contentTop - 2, (int)contentW + 6, (int)viewH + 6);
 
-    for (Field &f : fields)
+    for (Field &field : fields)
     {
-        Rectangle r = f.rect;
-        r.y -= state.scrollY;
+        Rectangle rect = field.rect;
+        rect.y -= state.scrollY;
 
-        if (r.y + r.height < contentTop || r.y > contentTop + viewH)
+        if (rect.y + rect.height < contentTop || rect.y > contentTop + viewH)
             continue;
 
-        bool hovered = CheckCollisionPointRec(mouse, r);
+        bool hovered = CheckCollisionPointRec(mouse, rect);
 
-        if (f.is_header)
+        if (field.is_header)
         {
-            DrawRectangleRec(r, hovered ? Color{180, 200, 230, 255} : Color{150, 170, 200, 255});
-            DrawRectangleLinesEx(r, 1, BLACK);
-            DrawText(f.node->collapsed ? ">" : "|", (int)r.x + 6, (int)r.y + 6, 14, BLACK);
-            DrawText(f.node->title.c_str(), (int)r.x + 24, (int)r.y + 6, 14, BLACK);
+            // background
+            Color bgColor = hovered ? Color{180, 200, 230, 255} : Color{150, 170, 200, 255};
+            DrawRectangleRec(rect, bgColor);
+            // outline
+            DrawRectangleLinesEx(rect, 1, BLACK);
+            // collapse/expand indicator
+            DrawText(field.node->collapsed ? ">" : "|", (int)rect.x + 6, (int)rect.y + 6, 14, BLACK);
+            // title
+            DrawText(field.node->title.c_str(), (int)rect.x + 24, (int)rect.y + 6, 14, BLACK);
 
+            // collapse or uncollapse on click
             if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-                f.node->collapsed = !f.node->collapsed;
+                field.node->collapsed = !field.node->collapsed;
         }
-        else if (f.config)
+        else if (field.config)
         {
-            DrawRectangleRec(r, (state.selectedNode && state.selectedNode->value && &(*state.selectedNode->value) == f.config)
-                                    ? Color{200, 230, 200, 255}
-                                    : Color{220, 220, 220, 255});
-            DrawRectangleLinesEx(r, 1, BLACK);
+            // background
+            DrawRectangleRec(rect, (state.selectedNode && state.selectedNode->value && &(*state.selectedNode->value) == field.config)
+                                       ? Color{200, 230, 200, 255}
+                                       : Color{220, 220, 220, 255});
+            DrawRectangleLinesEx(rect, 1, BLACK);
 
+            // text
             std::string displayText;
-            auto it = state.pendingEdits.find(f.config);
+            auto it = state.pendingEdits.find(field.config);
             if (it != state.pendingEdits.end())
                 displayText = it->second;
             else
-                displayText = ValueToString(*f.config);
+                displayText = ValueToString(*field.config);
+            displayText = field.node->title + " = " + displayText;
+            DrawText(displayText.c_str(), (int)rect.x + 12, (int)rect.y + 6, 14, BLACK);
 
-            displayText = f.node->title + " = " + displayText;
-            DrawText(displayText.c_str(), (int)r.x + 6, (int)r.y + 6, 14, BLACK);
-
+            // click to select / start editing
             if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
             {
-                state.selectedNode = f.node;
-                if (f.config->type != ValueType::Bool)
-                    state.pendingEdits[f.config] = ValueToString(*f.config);
+                state.selectedNode = field.node;
+                if (field.config->type != ValueType::Bool)
+                    state.pendingEdits[field.config] = ValueToString(*field.config);
                 else
                 {
-                    bool &b = std::get<bool>(f.config->value);
+                    bool &b = std::get<bool>(field.config->value);
                     b = !b;
                 }
             }
@@ -111,17 +125,19 @@ void DrawConfigUI(Node &root, ConfigUIState &state, float contentTop, float view
         ConfigValue *selected = &(*state.selectedNode->value);
         if (selected->type != ValueType::Bool)
         {
-            int c = GetCharPressed();
-            while (c > 0)
+            int characterPressed = GetCharPressed();
+            while (characterPressed > 0)
             {
-                if ((c >= '0' && c <= '9') || c == '-' || c == '.')
-                    state.pendingEdits[selected] += (char)c;
-                c = GetCharPressed();
+                if ((characterPressed >= '0' && characterPressed <= '9') || characterPressed == '-' || characterPressed == '.')
+                    state.pendingEdits[selected] += (char)characterPressed;
+                characterPressed = GetCharPressed();
             }
 
+            // remove last character on backspace
             if (IsKeyPressed(KEY_BACKSPACE) && !state.pendingEdits[selected].empty())
                 state.pendingEdits[selected].pop_back();
 
+            // apply edit on enter
             if (IsKeyPressed(KEY_ENTER))
             {
                 ApplyTextEdit(*selected, state.pendingEdits[selected]);

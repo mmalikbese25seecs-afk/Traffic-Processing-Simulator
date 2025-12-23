@@ -7,81 +7,86 @@
 
 bool SaveConfigToFile(Node& root, const std::string& path)
 {
-    std::ofstream ofs(path);
-    if (!ofs.is_open())
+    std::ofstream stream(path);
+    if (!stream.is_open())
         return false;
 
-    std::vector<ConfigValue*> all;
-    CollectConfigPointers(root, all);
+    std::vector<ConfigValue*> allConfigValues;
+    CollectConfigPointers(root, allConfigValues);
 
-    for (ConfigValue* cv : all)
+    for (ConfigValue* config : allConfigValues)
     {
-        ofs << cv->label << ":";
-        ofs << (cv->type == ValueType::Int ? "int:" :
-                cv->type == ValueType::Float ? "float:" : "bool:");
+        // label:type:value
+        stream << config->label << ":";
+        stream << (config->type == ValueType::Int ? "int:" :
+                config->type == ValueType::Float ? "float:" : "bool:");
 
-        if (cv->type == ValueType::Int)
-            ofs << std::get<int>(cv->value);
-        else if (cv->type == ValueType::Float)
-            ofs << std::get<float>(cv->value);
+        // add value based on type
+        if (config->type == ValueType::Int)
+            stream << std::get<int>(config->value);
+        else if (config->type == ValueType::Float)
+            stream << std::get<float>(config->value);
         else
-            ofs << (std::get<bool>(cv->value) ? "1" : "0");
+            stream << (std::get<bool>(config->value) ? "true" : "false");
 
-        ofs << "\n";
+        stream << "\n";
     }
     return true;
 }
 
 bool LoadConfigFromFile(Node& root, const std::string& path)
 {
-    std::ifstream ifs(path);
-    if (!ifs.is_open())
+    std::ifstream stream(path);
+    if (!stream.is_open())
         return false;
 
-    std::vector<ConfigValue*> all;
-    CollectConfigPointers(root, all);
+    std::vector<ConfigValue*> allConfigValues;
+    CollectConfigPointers(root, allConfigValues);
 
     auto findByLabel = [&](const std::string& label) -> ConfigValue*
     {
-        for (ConfigValue* c : all)
-            if (c->label == label)
-                return c;
+        for (ConfigValue* config : allConfigValues)
+            if (config->label == label)
+                return config;
         return nullptr;
     };
 
     std::string line;
-    while (std::getline(ifs, line))
+    while (std::getline(stream, line))
     {
+        // seperate string from label:type:value
         size_t a = line.find(':');
         size_t b = line.find(':', a + 1);
         if (a == std::string::npos || b == std::string::npos)
             continue;
 
+        // split into label, type, value
         std::string label = line.substr(0, a);
         std::string type = line.substr(a + 1, b - a - 1);
         std::string val = line.substr(b + 1);
 
-        ConfigValue* cv = findByLabel(label);
-        if (!cv)
+        ConfigValue* config = findByLabel(label);
+        if (!config)
             continue;
 
         try
         {
-            if (type == "int" && cv->type == ValueType::Int)
+            if (type == "int" && config->type == ValueType::Int)
             {
                 int v = std::stoi(val);
-                cv->value = (int)ClampFloat(v, cv->min_value, cv->max_value);
+                config->value = (int)ClampFloat(v, config->min_value, config->max_value);
             }
-            else if (type == "float" && cv->type == ValueType::Float)
+            else if (type == "float" && config->type == ValueType::Float)
             {
                 float v = std::stof(val);
-                cv->value = ClampFloat(v, cv->min_value, cv->max_value);
+                config->value = ClampFloat(v, config->min_value, config->max_value);
             }
-            else if (type == "bool" && cv->type == ValueType::Bool)
+            else if (type == "bool" && config->type == ValueType::Bool)
             {
-                cv->value = (val == "1" || val == "true");
+                config->value = (val == "true");
             }
         }
+        // Ignore conversion errors
         catch (...) {}
     }
     return true;

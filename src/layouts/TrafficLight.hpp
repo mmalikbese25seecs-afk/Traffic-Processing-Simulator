@@ -16,10 +16,10 @@ struct GameState;
 // constexpr bool DEBUG_TRAFFIC_LIGHT_CAR_PASSED = true;
 
 // traffic light graphics constants
-constexpr float TRAFFIC_LIGHT_RADIUS = 10.f;
+constexpr float TRAFFIC_LIGHT_RADIUS = 5.f;
 constexpr Color TRAFFIC_LIGHT_BG_COLOR = BLACK;
-constexpr float TRAFFIC_LIGHT_BG_PADDING = 5.f;
-constexpr float TRAFFIC_LIGHT_CAP_DISTANCE = 25.f;
+constexpr float TRAFFIC_LIGHT_BG_PADDING = 3.f;
+constexpr float TRAFFIC_LIGHT_CAP_DISTANCE = 5.f;
 
 // distance from traffic light to stop car
 // constexpr float TRAFFIC_LIGHT_CAR_DETECTION_RANGE = 50.f;

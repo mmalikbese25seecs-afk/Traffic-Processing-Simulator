@@ -6,6 +6,7 @@
 #include <variant>
 #include <string>
 
+// represents stored node
 struct Node
 {
     std::string title;
@@ -14,6 +15,7 @@ struct Node
     bool collapsed = false;
 };
 
+// ui field representation
 struct Field
 {
     Rectangle rect;

@@ -10,6 +10,8 @@
 
 #include "config.hpp"
 
+void DrawInstructions();
+
 int main()
 {
     GameState gameState;
@@ -40,7 +42,7 @@ int main()
     ConfigUIState configUI;
     bool showConfig = false;
 
-    SetExitKey(KEY_NULL);
+    SetExitKey(KEY_ESCAPE);
 
     while (!WindowShouldClose())
     {
@@ -93,14 +95,14 @@ int main()
 
         __ProcessDebugDraws();
 
+        if (!showConfig)
+        {
+            DrawInstructions();
+        }
+
         if (showConfig)
         {
-            DrawRectangle(
-                0,
-                0,
-                GetScreenWidth(),
-                GetScreenHeight(),
-                Fade(BLACK, 0.6f));
+            DrawRectangle(0, 0, WINDOW_SIZE.x, WINDOW_SIZE.y, Fade(BLACK, 0.6f));
 
             std::string help_text = "C = Close   S = Save   L = Load";
             int textWidth = MeasureText(help_text.c_str(), 16);
@@ -114,4 +116,25 @@ int main()
 
     CloseWindow();
     return 0;
+}
+
+void DrawInstructions()
+{
+    const int fontSize = 16;
+    const int lineHeight = 22;
+    int y = 10;
+
+    DrawText("Controls:", 10, y, fontSize, RAYWHITE);
+    y += lineHeight;
+
+    DrawText("C  - Toggle config UI", 10, y, fontSize, RAYWHITE);
+    y += lineHeight;
+
+    DrawText("R  - Restart simulation", 10, y, fontSize, RAYWHITE);
+    y += lineHeight;
+
+    DrawText("P  - Pause / Resume", 10, y, fontSize, RAYWHITE);
+    y += lineHeight;
+
+    DrawText("ESC - Quit", 10, y, fontSize, RAYWHITE);
 }
