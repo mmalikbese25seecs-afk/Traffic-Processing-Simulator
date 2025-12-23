@@ -25,12 +25,11 @@ bool m_checkCarCollision(Car &car, GameState &state)
         float distance = Vector2Distance(car.position, otherCar.position);
         if (distance < CAR_DETECTION_RADIUS)
         {
-            ConfigValue *cfg = TryReadConfig(state.rootConfigNode, "debug_car_detection_other_cars");
             bool debugOtherCars = false;
-            if (cfg && cfg->type == ValueType::Bool)
+            if (auto cfg = TryReadConfig(state.rootConfigNode, "debug_car_detection_other_cars"))
             {
-                if (auto p = std::get_if<bool>(&cfg->value))
-                    debugOtherCars = *p;
+                if (auto b = std::get_if<bool>(&cfg->value))
+                    debugOtherCars = *b;
             }
 
             if (debugOtherCars)

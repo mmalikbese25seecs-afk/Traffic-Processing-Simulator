@@ -45,7 +45,7 @@ void CollectConfigPointers(Node &node, std::vector<ConfigValue *> &out)
 
 ConfigValue *TryReadConfig(Node &node, const std::string &title)
 {
-    if (node.value.has_value() && node.title == title)
+    if (node.value.has_value() && node.value->label == title)
         return &(*node.value);
 
     for (Node &child : node.children)

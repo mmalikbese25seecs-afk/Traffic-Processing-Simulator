@@ -20,6 +20,22 @@ int main()
     InitGameState(gameState);
 
     gameState.rootConfigNode = BuildConfigTree();
+    LoadConfigFromFile(gameState.rootConfigNode, "config.txt");
+
+    // print config "speed"
+    if (auto cfg = TryReadConfig(gameState.rootConfigNode, "speed"))
+    {
+        if (auto f = std::get_if<int>(&cfg->value))
+            std::cout << "Config 'speed' = " << *f << "\n";
+    }
+
+    // print config "debug_mode"
+    if (auto cfg = TryReadConfig(gameState.rootConfigNode, "debug_car_detection_other_cars"))
+    {
+        if (auto b = std::get_if<bool>(&cfg->value))
+            std::cout << "Config 'debug_car_detection_other_cars' = " << (*b ? "true" : "false") << "\n";
+    }
+
     ConfigUIState configUI;
     bool showConfig = false;
 
@@ -30,22 +46,18 @@ int main()
         if (IsKeyPressed(KEY_C)) // toggle config UI
         {
             showConfig = !showConfig;
-
             if (!showConfig)
             {
-                // UI just closed
-                // Apply any pending edit buffer
-                if (configUI.editing && configUI.selected)
-                {
-                    ApplyTextEdit(*configUI.selected, configUI.editBuffer);
-                    configUI.editing = false;
-                    configUI.selected = nullptr;
-                }
+                // Apply all pending edits when closing UI
+                ApplyPendingEdits(configUI);
 
-                // Optional: save config automatically on close
+                // Optional: save automatically
                 SaveConfigToFile(gameState.rootConfigNode, "config.txt");
             }
         }
+
+        if (IsKeyPressed(KEY_SPACE))
+            std::cout << "TEST\n";
 
         if (showConfig)
         {
@@ -78,6 +90,8 @@ int main()
 
         DrawMainScreen(gameState);
 
+        __ProcessDebugDraws();
+
         if (showConfig)
         {
             DrawRectangle(
@@ -93,9 +107,6 @@ int main()
 
             DrawConfigUI(gameState.rootConfigNode, configUI, 40.0f, WINDOW_SIZE.y - 64.f, WINDOW_SIZE.x / 2.f);
         }
-
-        DrawFPS(10, 10);
-        __ProcessDebugDraws();
 
         EndDrawing();
     }
