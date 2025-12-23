@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
+#include <string>
 
 #include "Car.hpp"
 #include "VectorMath.hpp"
