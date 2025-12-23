@@ -112,9 +112,7 @@ inline void __DebugDrawCircleArc(
 {
 #if DEBUG_DRAW_ENABLED
     float start = AngleNormalizeDeg(startAngle);
-    float end = AngleNormalizeDeg(endAngle);
-
-    std::cout << "Debug Draw Circle Arc: start=" << start << " end=" << end << "\n";
+    float end = endAngle == 360 ? 360 : AngleNormalizeDeg(endAngle);
 
     // Normal case: no wraparound
     if (start <= end)

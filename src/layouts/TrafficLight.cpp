@@ -328,7 +328,11 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
     if (closestLight->state == TrafficLightState::GO)
     {
         if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, GREEN);
+            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(GREEN, 0.1f));
+        }
         return true;
     }
     else if (closestLight->state == TrafficLightState::STOP)
@@ -338,14 +342,22 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
         if (carBeforeWaitingPos)
         {
             if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+            {
                 __DebugDrawVectorAB(car.position, closestLight->position, 2, true, RED);
+                float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+                __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(RED, 0.1f));
+            }
 
             return true;
         }
 
         // else stop
         if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, Fade(RED, 0.5f));
+            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(RED, 0.1f));
+        }
 
         return false;
     }
@@ -361,7 +373,11 @@ bool TrafficLightUpdateCarState(TrafficLightGroup &trafficLightGroup, Car &car, 
         bool tooCloseToStop = shortestDistance <= minDistanceToStop;
 
         if (GetConfigBool(state.rootConfigNode, "debug_tl_car_can_pass", false))
+        {
             __DebugDrawVectorAB(car.position, closestLight->position, 2, true, ORANGE);
+            float range = GetConfigInt(state.rootConfigNode, "tl_car_detection_range", 50);
+            __DebugDrawCircleArc(closestLight->position, range, 0.f, 360.f, Fade(ORANGE, 0.1f));
+        }
 
         // if too close, allow to move to clear intersection; otherwise stop
         return tooCloseToStop;
